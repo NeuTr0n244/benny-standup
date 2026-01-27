@@ -746,6 +746,22 @@
 
     <!-- Inicializar variáveis globais ANTES dos módulos (executa imediatamente) -->
     <script>
+        // Error handler global para debug
+        window.addEventListener('error', (e) => {
+            console.error('🔥 ERRO GLOBAL:', e.error || e.message);
+            console.error('📍 Arquivo:', e.filename);
+            console.error('📍 Linha:', e.lineno, ':', e.colno);
+
+            // Mostrar erro na tela de loading
+            const loadingPercent = document.getElementById('loading-percent');
+            if (loadingPercent) {
+                loadingPercent.innerHTML = `
+                    <span style="color: #ff6b6b;">Erro: ${e.message}</span><br>
+                    <small style="color: #aaa;">Verifique o console (F12)</small>
+                `;
+            }
+        });
+
         // Declarar variáveis globais Firebase
         // IMPORTANTE: Não inicializar com valores default aqui para não sobrescrever
         // valores setados pela IIFE do Firebase que roda depois
@@ -760,13 +776,19 @@
         if (typeof window.isAudioUnlocked === 'undefined') {
             window.isAudioUnlocked = false;
         }
+
+        console.log('✅ Variáveis globais inicializadas');
     </script>
 
     <script type="module">
+        console.log('🎬 Módulo iniciando...');
+
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-        // ===== CONFIGURAÇÃO =====
+        console.log('✅ Imports concluídos');
+        console.log('📍 Three.js carregado:', typeof THREE !== 'undefined');
+
         const CONFIG = {
             // GLB hosted on Cloudflare R2 - No CORS issues, fast CDN delivery
             modelPath: 'https://pub-8d7b1a002dc7461881f41950b1c60105.r2.dev/mr_penguin.glb',
@@ -833,6 +855,9 @@
 
         // ===== INICIALIZAÇÃO =====
         function init() {
+            console.log('🎮 Função init() chamada');
+            console.log('📦 CONFIG:', CONFIG);
+
             // contractAddress agora é estático ("SOON") no HTML
             twitterLink.href = CONFIG.twitterUrl;
             communityLink.href = CONFIG.communityUrl;
@@ -892,12 +917,46 @@
 
         // ===== CARREGAMENTO DO MODELO =====
         function loadModel() {
+            console.log('🔄 Iniciando carregamento do modelo...');
+            console.log('📦 Caminho:', CONFIG.modelPath);
+
             const loader = new GLTFLoader();
+
+            // Fallback: se não houver progresso em 2s, mostrar loading genérico
+            let progressReceived = false;
+            const fallbackTimer = setTimeout(() => {
+                if (!progressReceived) {
+                    console.log('⚠️ Sem informação de progresso. Usando fallback...');
+                    loadingPercent.textContent = 'Carregando modelo...';
+
+                    // Animação fake de progresso
+                    let fakeProgress = 0;
+                    const fakeInterval = setInterval(() => {
+                        fakeProgress += 5;
+                        if (fakeProgress <= 90) {
+                            loadingBar.style.width = fakeProgress + '%';
+                            loadingPercent.textContent = fakeProgress + '%';
+                        }
+                    }, 500);
+
+                    // Limpar quando carregar
+                    window.fakeFallbackInterval = fakeInterval;
+                }
+            }, 2000);
 
             loader.load(
                 CONFIG.modelPath + '?t=' + Date.now(), // Evita cache
                 (gltf) => {
+                    clearTimeout(fallbackTimer);
+                    if (window.fakeFallbackInterval) {
+                        clearInterval(window.fakeFallbackInterval);
+                    }
+
                     console.log('✅ GLB carregado!');
+
+                    // Forçar 100%
+                    loadingBar.style.width = '100%';
+                    loadingPercent.textContent = '100%';
 
                     model = gltf.scene;
                     scene.add(model);
@@ -1141,25 +1200,50 @@
                         console.log('⚠️ Nenhuma animação encontrada no GLB!');
                     }
 
+                    // Mostrar botão ENTER
+                    setTimeout(() => {
+                        loadingEnterBtn.classList.add('visible');
+                        console.log('✅ Botão ENTER visível');
+                    }, 500);
+
                     openCurtains();
                 },
                 (xhr) => {
-                    if (xhr.total > 0) {
+                    progressReceived = true;
+
+                    if (xhr.lengthComputable && xhr.total > 0) {
                         const percent = Math.round((xhr.loaded / xhr.total) * 100);
                         loadingBar.style.width = percent + '%';
                         loadingPercent.textContent = percent + '%';
-
-                        // Quando chegar a 100%, mostrar botão ENTER
-                        if (percent === 100) {
-                            setTimeout(() => {
-                                loadingEnterBtn.classList.add('visible');
-                            }, 500); // Delay de 500ms para suavizar
-                        }
+                        console.log(`📊 Progresso: ${percent}% (${xhr.loaded}/${xhr.total})`);
+                    } else {
+                        // Se não tem tamanho total, mostrar apenas bytes carregados
+                        const mb = (xhr.loaded / 1024 / 1024).toFixed(2);
+                        loadingPercent.textContent = `${mb} MB`;
+                        console.log(`📊 Carregado: ${mb} MB`);
                     }
                 },
                 (error) => {
-                    console.error('❌ Erro:', error);
+                    clearTimeout(fallbackTimer);
+                    if (window.fakeFallbackInterval) {
+                        clearInterval(window.fakeFallbackInterval);
+                    }
+
+                    console.error('❌ ERRO ao carregar modelo:', error);
+                    console.error('📋 Detalhes:', {
+                        message: error.message,
+                        type: error.type,
+                        target: error.target
+                    });
+
                     loadingPercent.textContent = 'Erro ao carregar';
+                    loadingBar.style.width = '0%';
+                    loadingBar.style.background = 'linear-gradient(90deg, #ff0000, #ff6b6b)';
+
+                    // Mostrar mensagem de erro mais amigável
+                    setTimeout(() => {
+                        loadingPercent.innerHTML = 'Erro ao carregar modelo 3D<br><small>Verifique sua conexão</small>';
+                    }, 1000);
                 }
             );
         }
