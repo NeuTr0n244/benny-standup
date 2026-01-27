@@ -245,7 +245,6 @@
         #about-panel {
             left: 60px;
             transform: perspective(1000px) translateY(-50%) translateX(-30px) rotateY(8deg);
-            position: relative;
         }
 
         #about-panel::before {
@@ -274,7 +273,6 @@
         #community-panel {
             right: 40px;
             transform: perspective(1000px) translateY(-50%) translateX(30px) rotateY(-8deg);
-            position: relative;
         }
 
         #community-panel::before {
@@ -413,43 +411,6 @@
             to { transform: scaleY(1); }
         }
 
-        /* Indicador de fala do Benny */
-        #benny-speaking {
-            position: fixed;
-            bottom: 6rem;
-            left: 50%;
-            transform: translateX(-50%) scale(0);
-            padding: 16px 32px;
-            background: rgba(255, 46, 149, 0.9);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50px;
-            color: #ffffff;
-            font-family: 'Outfit', sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            z-index: 100;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(255, 46, 149, 0.5);
-        }
-
-        #benny-speaking.active {
-            transform: translateX(-50%) scale(1);
-        }
-
-        #benny-speaking::before {
-            content: '🎤';
-            margin-right: 10px;
-            font-size: 20px;
-            animation: micPulse 1s ease-in-out infinite;
-        }
-
-        @keyframes micPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-        }
     </style>
 </head>
 <body>
@@ -521,8 +482,6 @@
             <div class="viz-bar"></div>
             <div class="viz-bar"></div>
         </div>
-
-        <div id="benny-speaking">Benny is talking</div>
     </div>
 
     <script type="importmap">
@@ -599,7 +558,6 @@
         const copyBtn = document.getElementById('copy-btn');
         const twitterLink = document.getElementById('twitter-link');
         const buyLink = document.getElementById('buy-link');
-        const bennySpeaking = document.getElementById('benny-speaking');
 
         // ===== INICIALIZAÇÃO =====
         function init() {
@@ -980,7 +938,6 @@
 
             try {
                 // 1. Chamar API backend
-                console.log('🎭 Gerando piada com IA...');
                 const response = await fetch('/api/generate-joke', {
                     method: 'POST',
                     headers: {
@@ -1012,22 +969,18 @@
                 // 3. Criar e tocar áudio
                 const audio = new Audio(audioUrl);
 
-                // Mostrar indicador quando começar a tocar
+                // Tocar áudio
                 audio.addEventListener('play', () => {
-                    bennySpeaking.classList.add('active');
-                    console.log('🎤 Benny falando...');
+                    // Áudio iniciado
                 });
 
-                // Esconder indicador quando terminar
+                // Quando terminar
                 audio.addEventListener('ended', () => {
-                    bennySpeaking.classList.remove('active');
                     URL.revokeObjectURL(audioUrl);
-                    console.log('✅ Piada finalizada');
 
                     // Aguardar 3 segundos antes da próxima piada
                     if (jokeLoopEnabled && currentView === 'home') {
                         const delay = 3000; // 3 segundos
-                        console.log(`⏰ Próxima piada em ${(delay/1000).toFixed(1)}s`);
                         setTimeout(() => {
                             if (jokeLoopEnabled && currentView === 'home') {
                                 isPlayingJoke = false;
@@ -1044,7 +997,6 @@
                 // Handler de erro no áudio
                 audio.addEventListener('error', (e) => {
                     console.error('❌ Erro ao tocar áudio:', e);
-                    bennySpeaking.classList.remove('active');
                     URL.revokeObjectURL(audioUrl);
                     isPlayingJoke = false;
                 });
@@ -1055,7 +1007,6 @@
 
             } catch (error) {
                 console.error('❌ Erro ao gerar piada:', error);
-                bennySpeaking.classList.remove('active');
 
                 // Sistema de retry
                 if (retries > 0) {
@@ -1094,7 +1045,6 @@
 
         window.stopBenny = function() {
             jokeLoopEnabled = false;
-            bennySpeaking.classList.remove('active');
             console.log('⏸️ Sistema de piadas pausado. Benny foi silenciado.');
         };
 
