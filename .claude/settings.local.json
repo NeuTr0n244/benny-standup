@@ -29,7 +29,9 @@
       "Bash(git checkout:*)",
       "Bash(powershell -Command \"Start-Process ''https://vercel.com/vito01hugo02-9635s-projects/standup/settings/git''\")",
       "Bash(taskkill //F //PID 8437)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(powershell -Command \"Start-Process ''https://github.com/NeuTr0n244/benny-standup/releases/new''\")",
+      "Bash(powershell -Command \"Start-Process ''file:///C:/Users/NEUTRON/Documents/standup/upload-glb-guide.html''\")"
     ]
   }
 }

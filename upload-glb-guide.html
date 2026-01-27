@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload GLB to GitHub Releases - Step by Step</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0a0a0f;
+            color: #fff;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #ff2d95;
+            text-align: center;
+            border-bottom: 2px solid #ff2d95;
+            padding-bottom: 20px;
+        }
+        .step {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid #ffea00;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .step h2 {
+            color: #ffea00;
+            margin-top: 0;
+        }
+        .step-number {
+            background: #ffea00;
+            color: #000;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            margin-right: 15px;
+        }
+        .code {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            color: #00ff88;
+        }
+        .button {
+            background: linear-gradient(135deg, #ff2d95, #ffea00);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: scale(1.05);
+        }
+        .warning {
+            background: rgba(255, 165, 0, 0.2);
+            border-left: 4px solid #ffa500;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: rgba(0, 255, 136, 0.2);
+            border-left: 4px solid #00ff88;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .file-path {
+            color: #ff2d95;
+            font-weight: bold;
+        }
+        .url-display {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        ul {
+            margin: 10px 0;
+        }
+        li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Upload mr_penguin.glb to GitHub Releases</h1>
+
+    <div class="warning">
+        <strong>⚠️ IMPORTANTE:</strong> Este arquivo tem 132 MB. O upload pode levar alguns minutos dependendo da sua conexão.
+    </div>
+
+    <div class="step">
+        <h2><span class="step-number">1</span> Abrir Página de Novo Release</h2>
+        <p>Clique no botão abaixo para abrir a página de criação de release no GitHub:</p>
+        <a href="https://github.com/NeuTr0n244/benny-standup/releases/new"
+           class="button"
+           target="_blank"
+           onclick="markStepComplete(1)">
+            📦 Criar Novo Release
+        </a>
+        <p><strong>Ou acesse manualmente:</strong></p>
+        <div class="code">https://github.com/NeuTr0n244/benny-standup/releases/new</div>
+    </div>
+
+    <div class="step">
+        <h2><span class="step-number">2</span> Preencher Informações do Release</h2>
+        <p><strong>Tag version:</strong></p>
+        <div class="code">v1.0-assets</div>
+
+        <p><strong>Release title:</strong></p>
+        <div class="code">3D Model Assets - Mr. Penguin</div>
+
+        <p><strong>Description (opcional):</strong></p>
+        <div class="code">3D model files for Benny the Penguin stand-up comedy character.
+
+File: mr_penguin.glb (132 MB)
+Format: GLB (glTF Binary)
+Includes: Mesh, textures, animations, cameras, and lights</div>
+    </div>
+
+    <div class="step">
+        <h2><span class="step-number">3</span> Upload do Arquivo GLB</h2>
+        <p><strong>Localização do arquivo:</strong></p>
+        <div class="file-path">C:\Users\NEUTRON\Documents\standup\mr_penguin.glb</div>
+
+        <p><strong>Passos:</strong></p>
+        <ul>
+            <li>Na seção "Attach binaries", clique em "choose your files"</li>
+            <li>Navegue até: <span class="file-path">C:\Users\NEUTRON\Documents\standup\</span></li>
+            <li>Selecione: <strong>mr_penguin.glb</strong></li>
+            <li>Aguarde o upload completar (pode levar 2-5 minutos)</li>
+        </ul>
+
+        <div class="warning">
+            <strong>⏳ Aguarde:</strong> Não feche a página durante o upload! Aguarde até ver o arquivo listado.
+        </div>
+
+        <a href="file:///C:/Users/NEUTRON/Documents/standup"
+           class="button"
+           onclick="markStepComplete(3)">
+            📁 Abrir Pasta do Arquivo
+        </a>
+    </div>
+
+    <div class="step">
+        <h2><span class="step-number">4</span> Publicar o Release</h2>
+        <p>Depois do upload completar:</p>
+        <ul>
+            <li>✅ Certifique-se que o arquivo aparece na lista de binários</li>
+            <li>✅ Clique no botão verde <strong>"Publish release"</strong></li>
+            <li>✅ Aguarde a confirmação</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2><span class="step-number">5</span> Copiar URL do Arquivo</h2>
+        <p>Após publicar, você será redirecionado para a página do release.</p>
+        <p><strong>Para copiar a URL do arquivo:</strong></p>
+        <ul>
+            <li>Localize o arquivo <strong>mr_penguin.glb</strong> na seção "Assets"</li>
+            <li>Clique com botão direito no nome do arquivo</li>
+            <li>Selecione <strong>"Copy link address"</strong></li>
+        </ul>
+
+        <p><strong>A URL será algo como:</strong></p>
+        <div class="code">https://github.com/NeuTr0n244/benny-standup/releases/download/v1.0-assets/mr_penguin.glb</div>
+
+        <div class="success">
+            <strong>✅ Formato correto da URL:</strong><br>
+            <code>https://github.com/[usuario]/[repo]/releases/download/[tag]/[arquivo]</code>
+        </div>
+
+        <p><strong>Cole a URL aqui para testar:</strong></p>
+        <input type="text"
+               id="glb-url"
+               placeholder="Cole a URL do mr_penguin.glb aqui..."
+               style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #fff; border-radius: 5px; font-family: monospace;">
+
+        <button onclick="testURL()" class="button" style="margin-top: 10px;">
+            🧪 Testar URL
+        </button>
+
+        <button onclick="copyURL()" class="button" style="margin-top: 10px; background: linear-gradient(135deg, #00ff88, #00d4ff);">
+            📋 Copiar URL
+        </button>
+
+        <div id="url-result" style="margin-top: 15px;"></div>
+    </div>
+
+    <div class="step">
+        <h2><span class="step-number">6</span> Atualizar o Código</h2>
+        <p>Depois de copiar a URL, retorne ao terminal e digite:</p>
+        <div class="code">update-glb-url</div>
+
+        <p>Ou informe a URL copiada para que eu atualize o código automaticamente.</p>
+    </div>
+
+    <div class="success" style="margin-top: 30px; text-align: center;">
+        <h3>🎉 Parabéns!</h3>
+        <p>Após completar estes passos, o arquivo GLB estará hospedado no GitHub e o site poderá carregá-lo!</p>
+    </div>
+
+    <script>
+        function markStepComplete(step) {
+            console.log('Step ' + step + ' initiated');
+        }
+
+        function testURL() {
+            const url = document.getElementById('glb-url').value;
+            const resultDiv = document.getElementById('url-result');
+
+            if (!url) {
+                resultDiv.innerHTML = '<div style="color: #ff2d95;">❌ Por favor, cole uma URL primeiro!</div>';
+                return;
+            }
+
+            if (!url.includes('github.com') || !url.includes('releases/download') || !url.endsWith('.glb')) {
+                resultDiv.innerHTML = '<div style="color: #ffa500;">⚠️ URL não parece estar no formato correto. Verifique se copiou a URL do arquivo GLB corretamente.</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div style="color: #00ff88;">✅ URL parece válida! Formato correto detectado.</div>';
+
+            // Test if URL is accessible
+            fetch(url, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        const size = response.headers.get('content-length');
+                        const sizeInMB = (size / 1024 / 1024).toFixed(2);
+                        resultDiv.innerHTML += '<div style="color: #00ff88;">✅ Arquivo acessível! Tamanho: ' + sizeInMB + ' MB</div>';
+                    } else {
+                        resultDiv.innerHTML += '<div style="color: #ff2d95;">❌ Arquivo não acessível (Status: ' + response.status + '). Verifique se o release foi publicado.</div>';
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerHTML += '<div style="color: #ffa500;">⚠️ Não foi possível verificar o arquivo. Pode ser por CORS. Mas se a URL estiver correta, funcionará no site!</div>';
+                });
+        }
+
+        function copyURL() {
+            const url = document.getElementById('glb-url').value;
+            const resultDiv = document.getElementById('url-result');
+
+            if (!url) {
+                resultDiv.innerHTML = '<div style="color: #ff2d95;">❌ Não há URL para copiar!</div>';
+                return;
+            }
+
+            navigator.clipboard.writeText(url).then(() => {
+                resultDiv.innerHTML = '<div style="color: #00ff88;">✅ URL copiada para a área de transferência!</div>';
+
+                // Save to localStorage
+                localStorage.setItem('glb-url', url);
+
+                setTimeout(() => {
+                    resultDiv.innerHTML += '<div style="color: #00ff88;">💾 URL salva localmente. Pode fechar esta página e informar: "URL copiada"</div>';
+                }, 500);
+            }).catch(err => {
+                resultDiv.innerHTML = '<div style="color: #ff2d95;">❌ Erro ao copiar: ' + err + '</div>';
+            });
+        }
+
+        // Load saved URL on page load
+        window.addEventListener('load', () => {
+            const savedURL = localStorage.getItem('glb-url');
+            if (savedURL) {
+                document.getElementById('glb-url').value = savedURL;
+                document.getElementById('url-result').innerHTML = '<div style="color: #00ff88;">ℹ️ URL carregada do histórico local</div>';
+            }
+        });
+    </script>
+</body>
+</html>
