@@ -714,6 +714,22 @@
     }
     </script>
 
+    <!-- Inicializar variáveis Firebase ANTES dos módulos (executa imediatamente) -->
+    <script>
+        // Declarar variáveis globais Firebase
+        // IMPORTANTE: Não inicializar com valores default aqui para não sobrescrever
+        // valores setados pela IIFE do Firebase que roda depois
+        if (typeof window.firebaseReady === 'undefined') {
+            window.firebaseReady = false;
+        }
+        if (typeof window.currentJokeRef === 'undefined') {
+            window.currentJokeRef = null;
+        }
+        if (typeof window.shouldAutoStart === 'undefined') {
+            window.shouldAutoStart = false;
+        }
+    </script>
+
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -756,9 +772,8 @@
         let jokeInterval;
         let currentJokeIndex = 0;
         let isAudioUnlocked = false;
-        window.firebaseReady = false; // Flag que indica se Firebase está 100% pronto
-        window.shouldAutoStart = false; // Flag que indica se deve auto-iniciar quando Firebase estiver pronto
-        
+        // REMOVIDO: window.firebaseReady e window.shouldAutoStart - agora inicializados em script inline antes do módulo
+
         // Câmeras do GLB
         let glbCameras = {};
         let targetCameraPosition = new THREE.Vector3();
@@ -1215,7 +1230,7 @@
         // ===== SISTEMA DE PIADAS SINCRONIZADO VIA FIREBASE =====
         let isPlayingJoke = false;
         let jokeLoopEnabled = false;
-        window.currentJokeRef = null; // Referência Firebase para /currentJoke
+        // REMOVIDO: window.currentJokeRef = null - agora inicializado em script inline antes do módulo
         let lastJokeId = null; // ID da última piada tocada (evitar retocar)
         let isGeneratingJoke = false; // Flag para evitar gerar múltiplas vezes
         const JOKE_DURATION = 40000; // Duração estimada de uma piada (40 segundos)
