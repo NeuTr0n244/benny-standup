@@ -1,0 +1,148 @@
+════════════════════════════════════════════════════════════════
+🎉 BENNY STAND-UP COMEDY - DEPLOY COMPLETO!
+════════════════════════════════════════════════════════════════
+
+📌 URL DO SITE (PRODUÇÃO)
+────────────────────────────────────────────────────────────────
+🌐 https://standup-iota.vercel.app
+
+📌 GITHUB REPOSITÓRIO
+────────────────────────────────────────────────────────────────
+🔗 https://github.com/NeuTr0n244/benny-standup
+
+📌 VERCEL DASHBOARD
+────────────────────────────────────────────────────────────────
+⚙️ https://vercel.com/vito01hugo02-9635s-projects/standup
+
+════════════════════════════════════════════════════════════════
+⚠️ AÇÕES NECESSÁRIAS
+════════════════════════════════════════════════════════════════
+
+1. CONECTAR GITHUB PARA DEPLOY AUTOMÁTICO
+   ----------------------------------------
+   Acesse: https://vercel.com/vito01hugo02-9635s-projects/standup/settings/git
+
+   - Clique em "Connect Git Repository"
+   - Selecione GitHub
+   - Selecione: NeuTr0n244/benny-standup
+   - Confirme a conexão
+
+   ✅ Após conectar, cada push ao GitHub fará deploy automático!
+
+2. ATUALIZAR CHAVE DA ANTHROPIC
+   ----------------------------------------
+   Acesse: https://vercel.com/vito01hugo02-9635s-projects/standup/settings/environment-variables
+
+   - Encontre: ANTHROPIC_API_KEY
+   - Valor atual: "your-anthropic-api-key-here" (placeholder)
+   - Clique em "Edit"
+   - Cole sua chave completa: sk-ant-api03-...
+   - Clique em "Save"
+   - IMPORTANTE: Faça um redeploy após salvar!
+
+   Comando para redeploy:
+   ```
+   cd C:\Users\NEUTRON\Documents\standup
+   vercel --prod
+   ```
+
+3. HOSPEDAR ARQUIVO GLB (mr_penguin.glb)
+   ----------------------------------------
+   O arquivo é muito grande (132 MB) para Vercel/GitHub.
+
+   OPÇÃO A - GitHub Releases (Recomendado):
+   1. Acesse: https://github.com/NeuTr0n244/benny-standup/releases/new
+   2. Tag: v1.0
+   3. Title: "3D Model Assets"
+   4. Arraste mr_penguin.glb para upload
+   5. Clique em "Publish release"
+   6. Copie o URL do arquivo (botão direito > Copy link address)
+   7. Edite index.html, linha ~504:
+      modelPath: 'URL_DO_GLB_AQUI'
+   8. Commit e push:
+      ```
+      git add index.html
+      git commit -m "Update GLB path to GitHub Releases"
+      git push origin main
+      ```
+
+   OPÇÃO B - Cloudflare R2 (Grátis até 10GB):
+   1. Crie conta: https://cloudflare.com
+   2. R2 > Create bucket: "benny-assets"
+   3. Upload mr_penguin.glb
+   4. Configure acesso público
+   5. Use a URL do R2 no index.html
+
+════════════════════════════════════════════════════════════════
+✅ STATUS ATUAL
+════════════════════════════════════════════════════════════════
+
+✅ Código no GitHub
+✅ Deploy na Vercel
+✅ ElevenLabs API configurada
+⚠️ Anthropic API precisa ser atualizada (placeholder)
+⚠️ Arquivo GLB precisa ser hospedado
+⚠️ GitHub precisa ser conectado ao Vercel
+
+════════════════════════════════════════════════════════════════
+🎭 SISTEMA DE PIADAS
+════════════════════════════════════════════════════════════════
+
+STATUS: Desativado por padrão (AUTO_START = false)
+
+Para testar:
+1. Abra: https://standup-iota.vercel.app
+2. Abra console (F12)
+3. Digite: startBenny()
+4. Benny começará a contar piadas!
+5. Para parar: stopBenny()
+
+Para ativar permanentemente:
+1. Edite index.html, linha ~503
+2. Mude: const AUTO_START = true;
+3. Commit e push
+4. Vercel fará deploy automático (se conectado ao GitHub)
+
+⚠️ CUSTO ESTIMADO COM AUTO_START=true:
+   - ~$1.44/hora
+   - ~$35/dia
+   Mantenha false até o lançamento oficial!
+
+════════════════════════════════════════════════════════════════
+🔧 COMANDOS ÚTEIS
+════════════════════════════════════════════════════════════════
+
+# Ver logs de produção
+vercel logs https://standup-iota.vercel.app
+
+# Fazer novo deploy
+vercel --prod
+
+# Ver variáveis de ambiente
+vercel env ls
+
+# Abrir dashboard
+vercel
+
+════════════════════════════════════════════════════════════════
+📚 DOCUMENTAÇÃO
+════════════════════════════════════════════════════════════════
+
+- DEPLOY_GUIDE.md - Guia completo de deploy
+- COMANDOS_GITHUB.txt - Comandos do GitHub
+- README.md - Documentação do projeto
+
+════════════════════════════════════════════════════════════════
+🎉 PRONTO!
+════════════════════════════════════════════════════════════════
+
+Seu site está no ar em: https://standup-iota.vercel.app
+
+Próximos passos:
+1. Conecte GitHub ao Vercel (link acima)
+2. Atualize chave Anthropic
+3. Hospede o arquivo GLB
+4. Teste o site
+5. Quando estiver pronto, ative AUTO_START
+
+════════════════════════════════════════════════════════════════
