@@ -547,6 +547,8 @@
             flex: 1;
             display: none;
             flex-direction: column;
+            overflow: hidden; /* Força o scroll interno no #chat-messages */
+            min-height: 0; /* Necessário para flex children com overflow */
         }
 
         #chat-main.active {
@@ -560,6 +562,7 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            min-height: 0; /* Permite scroll correto */
         }
 
         #chat-messages::-webkit-scrollbar {
@@ -589,8 +592,8 @@
 
         .message-user {
             font-weight: 600;
-            color: #ffffff;
             margin-right: 6px;
+            /* Cor definida via inline style baseada no hash do username */
         }
 
         .message-text {
@@ -1481,10 +1484,16 @@
             // copyBtn removido - contract address agora é "SOON" estático
 
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'ArrowLeft') changeView('about');
-                else if (e.key === 'ArrowRight') changeView('community');
-                else if (e.key === 'Escape' || e.key === ' ') { changeView('home'); e.preventDefault(); }
-                else if (e.key === 'm' || e.key === 'M') volumeBtn.click();
+                // Não bloquear teclas se o usuário estiver digitando em um input
+                const isTyping = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+
+                if (e.key === 'ArrowLeft' && !isTyping) changeView('about');
+                else if (e.key === 'ArrowRight' && !isTyping) changeView('community');
+                else if ((e.key === 'Escape' || e.key === ' ') && !isTyping) {
+                    changeView('home');
+                    e.preventDefault();
+                }
+                else if ((e.key === 'm' || e.key === 'M') && !isTyping) volumeBtn.click();
             });
         }
 
@@ -1657,6 +1666,21 @@
                 });
             }
 
+            // Gera cor única e consistente baseada no username
+            function getUserColor(username) {
+                let hash = 0;
+                for (let i = 0; i < username.length; i++) {
+                    hash = username.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                const colors = [
+                    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
+                    '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F',
+                    '#BB8FCE', '#85C1E9', '#F8B739', '#E74C3C',
+                    '#3498DB', '#2ECC71', '#9B59B6', '#1ABC9C'
+                ];
+                return colors[Math.abs(hash) % colors.length];
+            }
+
             // Renderizar uma mensagem
             function renderMessage(msg) {
                 const messageEl = document.createElement('div');
@@ -1667,9 +1691,11 @@
                     minute: '2-digit'
                 });
 
+                const userColor = getUserColor(msg.username);
+
                 messageEl.innerHTML = `
                     <div class="message-time">${time}</div>
-                    <span class="message-user">${escapeHtml(msg.username)}:</span>
+                    <span class="message-user" style="color: ${userColor};">${escapeHtml(msg.username)}:</span>
                     <span class="message-text">${escapeHtml(msg.text)}</span>
                 `;
 
