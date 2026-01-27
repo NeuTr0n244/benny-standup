@@ -639,39 +639,8 @@
             border-color: rgba(255, 255, 255, 0.3);
         }
 
-        /* ===== TELA DE ENTRADA (ENTER SCREEN) ===== */
-        #enter-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0a0a0f;
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2rem;
-            opacity: 1;
-            transition: opacity 0.8s ease;
-        }
-
-        #enter-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .live-indicator {
-            font-family: 'Outfit', sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 3px;
-            color: #ffffff;
-            text-transform: uppercase;
-        }
-
-        .enter-button {
+        /* ===== BOTÃO ENTER NA TELA DE LOADING ===== */
+        #loading-enter-btn {
             background: transparent;
             border: 1px solid rgba(255, 255, 255, 0.5);
             color: white;
@@ -684,9 +653,17 @@
             cursor: pointer;
             border-radius: 8px;
             transition: all 0.3s ease;
+            margin-top: 2rem;
+            opacity: 0;
+            pointer-events: none;
         }
 
-        .enter-button:hover {
+        #loading-enter-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #loading-enter-btn:hover {
             background: rgba(255, 255, 255, 0.1);
             border-color: white;
         }
@@ -694,12 +671,6 @@
     </style>
 </head>
 <body>
-    <!-- ===== TELA DE ENTRADA ===== -->
-    <div id="enter-screen">
-        <span class="live-indicator">🔴 LIVE</span>
-        <button class="enter-button">ENTER</button>
-    </div>
-
     <div id="canvas-container"></div>
 
     <div id="curtains">
@@ -713,6 +684,7 @@
             <div id="loading-bar"></div>
         </div>
         <div id="loading-percent">0%</div>
+        <button id="loading-enter-btn">ENTER</button>
     </div>
 
     <div id="ui-layer">
@@ -841,12 +813,11 @@
         const ANIMATION_SPEED = 2.5; // BEM mais rápido
 
         // ===== ELEMENTOS DOM =====
-        const enterScreen = document.getElementById('enter-screen');
-        const enterButton = document.querySelector('.enter-button');
         const curtains = document.getElementById('curtains');
         const loadingOverlay = document.getElementById('loading-overlay');
         const loadingBar = document.getElementById('loading-bar');
         const loadingPercent = document.getElementById('loading-percent');
+        const loadingEnterBtn = document.getElementById('loading-enter-btn');
         const jokeDisplay = document.getElementById('joke-display');
         const jokeText = document.getElementById('joke-text');
         const navButtons = document.querySelectorAll('.nav-btn');
@@ -1177,6 +1148,13 @@
                         const percent = Math.round((xhr.loaded / xhr.total) * 100);
                         loadingBar.style.width = percent + '%';
                         loadingPercent.textContent = percent + '%';
+
+                        // Quando chegar a 100%, mostrar botão ENTER
+                        if (percent === 100) {
+                            setTimeout(() => {
+                                loadingEnterBtn.classList.add('visible');
+                            }, 500); // Delay de 500ms para suavizar
+                        }
                     }
                 },
                 (error) => {
@@ -1187,19 +1165,9 @@
         }
 
         function openCurtains() {
-            setTimeout(() => {
-                loadingOverlay.classList.add('hidden');
-                curtains.classList.add('open');
-
-                // Mostra o chat junto com os botões (apenas na HOME, que é a view inicial)
-                setTimeout(() => {
-                    liveChat.classList.add('visible');
-                }, 500);
-
-                // NÃO inicia automaticamente - aguarda clique em ENTER
-                // A tela de entrada permanece visível até o usuário clicar
-                console.log('✅ Cortinas abertas. Aguardando clique em ENTER...');
-            }, 500);
+            // NÃO esconde o loading overlay automaticamente
+            // Apenas prepara as cortinas para abrir quando clicar em ENTER
+            console.log('✅ Modelo carregado. Aguardando clique em ENTER...');
         }
 
         // ===== ÁUDIO =====
@@ -1594,18 +1562,28 @@
 
         // ===== EVENTOS =====
         function setupEventListeners() {
-            // BOTÃO ENTER - Entra no site (NÃO inicia piadas ainda)
-            enterButton.addEventListener('click', () => {
-                console.log('🎬 ENTER clicado! Entrando no show...');
+            // BOTÃO ENTER - Abre cortinas e desbloqueia áudio (NÃO inicia piadas ainda)
+            loadingEnterBtn.addEventListener('click', () => {
+                console.log('🎬 ENTER clicado! Abrindo cortinas...');
 
-                // Esconde tela de entrada
-                enterScreen.classList.add('hidden');
+                // Esconde tela de loading
+                loadingOverlay.classList.add('hidden');
+
+                // Abre cortinas
+                setTimeout(() => {
+                    curtains.classList.add('open');
+
+                    // Mostra o chat junto com os botões
+                    setTimeout(() => {
+                        liveChat.classList.add('visible');
+                    }, 500);
+                }, 300);
 
                 // Desbloqueia áudio
                 unlockAudio();
 
-                // NÃO inicia Benny ainda - aguarda comando "LANÇAMENTO" no chat
-                console.log('⏸️ Aguardando comando "LANÇAMENTO" no chat para iniciar as piadas...');
+                // NÃO inicia Benny ainda - aguarda comando "LANÇAMENTO"
+                console.log('⏸️ Aguardando comando "LANÇAMENTO" para iniciar as piadas...');
             });
 
             // Desbloquear áudio no primeiro clique do usuário (backup)
