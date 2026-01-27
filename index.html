@@ -449,7 +449,7 @@
         <div id="about-panel" class="panel">
             <h2 class="panel-title">About Benny</h2>
             <div class="panel-content">
-                <p>Welcome to Benny's Stand-Up Comedy show. The funniest penguin in the crypto world bringing laughs to the blockchain.</p>
+                <p>Welcome to Benny's Stand-Up Comedy show. The funniest Bird in the crypto world bringing laughs to the blockchain.</p>
                 <p>Benny is a digital performer combining cutting-edge 3D animation with blockchain technology, creating a unique entertainment experience in the metaverse.</p>
                 <p>Built with Three.js and powered by Web3, Benny represents the future of digital entertainment and community engagement.</p>
             </div>
@@ -462,15 +462,14 @@
 
                 <div style="margin: 24px 0;">
                     <a href="#" class="social-btn-panel" id="twitter-link" target="_blank">Twitter / X</a>
-                    <a href="#" class="social-btn-panel" target="_blank">Telegram</a>
+                    <a href="#" class="social-btn-panel" target="_blank">Community</a>
                     <a href="#" class="social-btn-panel" id="buy-link" target="_blank">Buy Token</a>
                 </div>
 
                 <div class="contract-container">
                     <div class="contract-label">Contract Address:</div>
-                    <div class="contract-box">
-                        <span id="contract-address"></span>
-                        <button id="copy-btn">Copy</button>
+                    <div class="contract-box" style="justify-content: center;">
+                        <span id="contract-address" style="font-size: 1.5rem; font-weight: bold; color: #fff;">SOON</span>
                     </div>
                 </div>
             </div>
@@ -561,7 +560,7 @@
 
         // ===== INICIALIZAÇÃO =====
         function init() {
-            contractAddressEl.textContent = CONFIG.contractAddress;
+            // contractAddress agora é estático ("SOON") no HTML
             twitterLink.href = CONFIG.twitterUrl;
             buyLink.href = CONFIG.buyUrl;
 
@@ -1184,17 +1183,7 @@
                 btn.addEventListener('click', () => changeView(btn.dataset.view));
             });
 
-            copyBtn.addEventListener('click', async () => {
-                try {
-                    await navigator.clipboard.writeText(CONFIG.contractAddress);
-                    copyBtn.textContent = 'Copied!';
-                    copyBtn.classList.add('copied');
-                    setTimeout(() => {
-                        copyBtn.textContent = 'Copy';
-                        copyBtn.classList.remove('copied');
-                    }, 2000);
-                } catch (err) {}
-            });
+            // copyBtn removido - contract address agora é "SOON" estático
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'ArrowLeft') changeView('about');
