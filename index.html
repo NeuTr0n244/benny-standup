@@ -756,8 +756,8 @@
         let jokeInterval;
         let currentJokeIndex = 0;
         let isAudioUnlocked = false;
-        let firebaseReady = false; // Flag que indica se Firebase está 100% pronto
-        let shouldAutoStart = false; // Flag que indica se deve auto-iniciar quando Firebase estiver pronto
+        window.firebaseReady = false; // Flag que indica se Firebase está 100% pronto
+        window.shouldAutoStart = false; // Flag que indica se deve auto-iniciar quando Firebase estiver pronto
         
         // Câmeras do GLB
         let glbCameras = {};
@@ -1110,11 +1110,11 @@
 
                 // Marcar que deve iniciar automaticamente quando Firebase estiver pronto
                 if (AUTO_START) {
-                    shouldAutoStart = true;
+                    window.shouldAutoStart = true;
                     console.log('🎬 Auto-start ativado. Aguardando Firebase...');
 
                     // Se Firebase já estiver pronto, iniciar imediatamente
-                    if (firebaseReady && currentJokeRef) {
+                    if (window.firebaseReady && window.currentJokeRef) {
                         console.log('🎭 Firebase já pronto! Iniciando Benny...');
                         setTimeout(() => initializeBenny(), 2000);
                     }
@@ -1180,18 +1180,18 @@
         // ===== SISTEMA DE PIADAS SINCRONIZADO VIA FIREBASE =====
         let isPlayingJoke = false;
         let jokeLoopEnabled = false;
-        let currentJokeRef = null; // Referência Firebase para /currentJoke
+        window.currentJokeRef = null; // Referência Firebase para /currentJoke
         let lastJokeId = null; // ID da última piada tocada (evitar retocar)
         let isGeneratingJoke = false; // Flag para evitar gerar múltiplas vezes
         const JOKE_DURATION = 40000; // Duração estimada de uma piada (40 segundos)
 
         // Função para gerar e publicar piada no Firebase (sincronizada para todos)
         async function generateAndBroadcastJoke() {
-            if (isGeneratingJoke || !currentJokeRef) return;
+            if (isGeneratingJoke || !window.currentJokeRef) return;
 
             // Verificar se já existe piada recente (última 35 segundos)
             try {
-                const snapshot = await currentJokeRef.once('value');
+                const snapshot = await window.currentJokeRef.once('value');
                 const existingJoke = snapshot.val();
 
                 if (existingJoke && existingJoke.createdAt) {
@@ -1237,7 +1237,7 @@
                 };
 
                 // Publicar no Firebase para TODOS os clientes
-                await currentJokeRef.set(jokeData);
+                await window.currentJokeRef.set(jokeData);
                 console.log(`📡 Piada publicada no Firebase! ID: ${jokeId}`);
 
             } catch (error) {
@@ -1377,14 +1377,14 @@
 
         // Listener Firebase - escuta mudanças em /currentJoke
         function setupJokeSyncListener() {
-            if (!currentJokeRef) {
+            if (!window.currentJokeRef) {
                 console.error('❌ Referência Firebase não inicializada!');
                 return;
             }
 
             console.log('👂 Escutando piadas sincronizadas via Firebase...');
 
-            currentJokeRef.on('value', (snapshot) => {
+            window.currentJokeRef.on('value', (snapshot) => {
                 const jokeData = snapshot.val();
 
                 console.log('🔥 Firebase listener disparado!');
@@ -1414,8 +1414,8 @@
             }
 
             // Verificar se Firebase está pronto
-            if (!firebaseReady || !currentJokeRef) {
-                console.error('❌ Firebase não está pronto! Status: firebaseReady =', firebaseReady, ', currentJokeRef =', !!currentJokeRef);
+            if (!window.firebaseReady || !window.currentJokeRef) {
+                console.error('❌ Firebase não está pronto! Status: firebaseReady =', window.firebaseReady, ', currentJokeRef =', !!window.currentJokeRef);
                 return;
             }
 
@@ -1427,7 +1427,7 @@
             setupJokeSyncListener();
 
             // Verificar se já existe piada atual
-            const snapshot = await currentJokeRef.once('value');
+            const snapshot = await window.currentJokeRef.once('value');
             const existingJoke = snapshot.val();
 
             if (existingJoke && existingJoke.id) {
@@ -1718,7 +1718,7 @@
                 }
             } catch (error) {
                 console.error('❌ Erro ao inicializar Firebase:', error);
-                firebaseReady = false;
+                window.firebaseReady = false;
             }
 
             // Elementos DOM
