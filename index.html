@@ -761,7 +761,7 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
         // ===== CONFIGURAÇÃO =====
-        const AUTO_START = true; // ATIVADO - Sistema inicia automaticamente no lançamento
+        const AUTO_START = false; // DESATIVADO - Usar apenas no lançamento oficial
 
         const CONFIG = {
             // GLB hosted on Cloudflare R2 - No CORS issues, fast CDN delivery
@@ -1315,13 +1315,14 @@
             }
         }
 
-        // ===== FUNÇÃO INTERNA DE INICIALIZAÇÃO (não acessível via console) =====
+        // ===== FUNÇÕES DE CONTROLE (via console para desenvolvimento) =====
         async function initializeBenny() {
             if (jokeLoopEnabled) {
+                console.log('⚠️ Benny já está ativo!');
                 return;
             }
             jokeLoopEnabled = true;
-            console.log('🎭 Sistema de piadas ativado automaticamente!');
+            console.log('🎭 Sistema de piadas ativado!');
             console.log('📦 Pré-carregando buffer inicial (2 piadas)...');
 
             // Pré-carregar 2 piadas antes de começar
@@ -1332,9 +1333,13 @@
             playNextJoke();
         }
 
-        // ===== FUNÇÕES DE CONTROLE BLOQUEADAS =====
-        // Controles removidos da produção - sistema roda automaticamente
-        // window.startBenny e window.stopBenny foram removidos para segurança
+        // Expor controles no console para desenvolvimento
+        window.startBenny = initializeBenny;
+        window.stopBenny = function() {
+            jokeLoopEnabled = false;
+            console.log('⏸️ Sistema de piadas pausado.');
+            console.log(`📊 Buffer atual: ${jokeBuffer.length} piadas`);
+        };
 
         // ===== PIADAS (DESATIVADO) =====
         /*
