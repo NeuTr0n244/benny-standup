@@ -411,6 +411,270 @@
             to { transform: scaleY(1); }
         }
 
+        /* ===== CHAT AO VIVO ===== */
+        #chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            z-index: 1000;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        #chat-toggle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff2d95, #ff6b6b);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 20px rgba(255, 46, 149, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        #chat-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(255, 46, 149, 0.6);
+        }
+
+        #chat-box {
+            display: none;
+            flex-direction: column;
+            height: 500px;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+            margin-bottom: 10px;
+        }
+
+        #chat-box.open {
+            display: flex;
+        }
+
+        #chat-header {
+            padding: 16px;
+            background: linear-gradient(135deg, #ff2d95, #ff6b6b);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #chat-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        #chat-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        #chat-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        #chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        #chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 46, 149, 0.5);
+            border-radius: 3px;
+        }
+
+        .chat-message {
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid #ff2d95;
+        }
+
+        .chat-message-time {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 4px;
+        }
+
+        .chat-message-nickname {
+            font-weight: 600;
+            color: #ff2d95;
+            margin-right: 6px;
+        }
+
+        .chat-message-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+
+        #chat-input-container {
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 8px;
+        }
+
+        #chat-input {
+            flex: 1;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+        }
+
+        #chat-input:focus {
+            outline: none;
+            border-color: #ff2d95;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        #chat-send {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ff2d95, #ff6b6b);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #chat-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 46, 149, 0.4);
+        }
+
+        #chat-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Nickname Modal */
+        #nickname-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        #nickname-modal.show {
+            display: flex;
+        }
+
+        #nickname-form {
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 32px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        #nickname-form h3 {
+            color: white;
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+
+        #nickname-form p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        #nickname-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        #nickname-input:focus {
+            outline: none;
+            border-color: #ff2d95;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        #nickname-submit {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #ff2d95, #ff6b6b);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #nickname-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(255, 46, 149, 0.4);
+        }
+
+        #chat-empty {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            padding: 40px 20px;
+        }
+
     </style>
 </head>
 <body>
@@ -1214,6 +1478,246 @@
         }
 
         init();
+    </script>
+
+    <!-- ===== CHAT AO VIVO ===== -->
+    <div id="chat-container">
+        <div id="chat-box">
+            <div id="chat-header">
+                <h3>💬 Live Chat</h3>
+                <button id="chat-close">×</button>
+            </div>
+            <div id="chat-messages">
+                <div id="chat-empty">Seja o primeiro a enviar uma mensagem!</div>
+            </div>
+            <div id="chat-input-container">
+                <input
+                    type="text"
+                    id="chat-input"
+                    placeholder="Digite sua mensagem..."
+                    maxlength="500"
+                    disabled
+                />
+                <button id="chat-send" disabled>Enviar</button>
+            </div>
+        </div>
+        <button id="chat-toggle">💬</button>
+    </div>
+
+    <!-- Modal de Nickname -->
+    <div id="nickname-modal">
+        <div id="nickname-form">
+            <h3>Entrar no Chat</h3>
+            <p>Escolha um nickname para participar da conversa</p>
+            <input
+                type="text"
+                id="nickname-input"
+                placeholder="Seu nickname..."
+                maxlength="20"
+            />
+            <button id="nickname-submit">Entrar no Chat</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== SISTEMA DE CHAT AO VIVO =====
+        (function() {
+            const chatContainer = document.getElementById('chat-container');
+            const chatBox = document.getElementById('chat-box');
+            const chatToggle = document.getElementById('chat-toggle');
+            const chatClose = document.getElementById('chat-close');
+            const chatMessages = document.getElementById('chat-messages');
+            const chatInput = document.getElementById('chat-input');
+            const chatSend = document.getElementById('chat-send');
+            const chatEmpty = document.getElementById('chat-empty');
+
+            const nicknameModal = document.getElementById('nickname-modal');
+            const nicknameInput = document.getElementById('nickname-input');
+            const nicknameSubmit = document.getElementById('nickname-submit');
+
+            let userNickname = null;
+            let pollingInterval = null;
+            let lastMessageId = null;
+
+            // Verificar se já tem nickname salvo
+            const savedNickname = localStorage.getItem('chat_nickname');
+            if (savedNickname) {
+                userNickname = savedNickname;
+                enableChat();
+            }
+
+            // Toggle chat
+            chatToggle.addEventListener('click', () => {
+                if (!userNickname) {
+                    nicknameModal.classList.add('show');
+                } else {
+                    chatBox.classList.add('open');
+                    chatToggle.style.display = 'none';
+                    loadMessages();
+                    startPolling();
+                }
+            });
+
+            // Fechar chat
+            chatClose.addEventListener('click', () => {
+                chatBox.classList.remove('open');
+                chatToggle.style.display = 'flex';
+                stopPolling();
+            });
+
+            // Nickname modal
+            nicknameSubmit.addEventListener('click', submitNickname);
+            nicknameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitNickname();
+            });
+
+            function submitNickname() {
+                const nickname = nicknameInput.value.trim();
+                if (!nickname) {
+                    alert('Por favor, digite um nickname');
+                    return;
+                }
+                if (nickname.length > 20) {
+                    alert('Nickname muito longo (max 20 caracteres)');
+                    return;
+                }
+
+                userNickname = nickname;
+                localStorage.setItem('chat_nickname', nickname);
+                nicknameModal.classList.remove('show');
+                chatBox.classList.add('open');
+                chatToggle.style.display = 'none';
+                enableChat();
+                loadMessages();
+                startPolling();
+            }
+
+            function enableChat() {
+                chatInput.disabled = false;
+                chatSend.disabled = false;
+            }
+
+            // Enviar mensagem
+            chatSend.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            async function sendMessage() {
+                const message = chatInput.value.trim();
+                if (!message || !userNickname) return;
+
+                chatSend.disabled = true;
+                chatInput.disabled = true;
+
+                try {
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nickname: userNickname,
+                            message: message
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        chatInput.value = '';
+                        loadMessages();
+                    } else {
+                        alert('Erro ao enviar mensagem: ' + data.error);
+                    }
+                } catch (error) {
+                    console.error('Erro ao enviar mensagem:', error);
+                    alert('Erro ao enviar mensagem');
+                } finally {
+                    chatSend.disabled = false;
+                    chatInput.disabled = false;
+                    chatInput.focus();
+                }
+            }
+
+            // Carregar mensagens
+            async function loadMessages() {
+                try {
+                    const response = await fetch('/api/chat');
+                    const data = await response.json();
+
+                    if (data.success && data.messages.length > 0) {
+                        chatEmpty.style.display = 'none';
+                        renderMessages(data.messages);
+                    } else {
+                        chatEmpty.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar mensagens:', error);
+                }
+            }
+
+            // Renderizar mensagens
+            function renderMessages(messages) {
+                // Remover mensagens antigas (manter apenas chat-empty)
+                const oldMessages = chatMessages.querySelectorAll('.chat-message');
+                oldMessages.forEach(msg => msg.remove());
+
+                // Adicionar novas mensagens
+                messages.forEach(msg => {
+                    const messageEl = document.createElement('div');
+                    messageEl.className = 'chat-message';
+                    messageEl.dataset.id = msg.id;
+
+                    const time = new Date(msg.timestamp).toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    messageEl.innerHTML = `
+                        <div class="chat-message-time">${time}</div>
+                        <div>
+                            <span class="chat-message-nickname">${escapeHtml(msg.nickname)}:</span>
+                            <span class="chat-message-text">${escapeHtml(msg.message)}</span>
+                        </div>
+                    `;
+
+                    chatMessages.appendChild(messageEl);
+                });
+
+                // Scroll para o final
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Atualizar último ID
+                if (messages.length > 0) {
+                    lastMessageId = messages[messages.length - 1].id;
+                }
+            }
+
+            // Escape HTML para segurança
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Polling para novas mensagens
+            function startPolling() {
+                if (pollingInterval) return;
+                pollingInterval = setInterval(loadMessages, 3000); // A cada 3 segundos
+            }
+
+            function stopPolling() {
+                if (pollingInterval) {
+                    clearInterval(pollingInterval);
+                    pollingInterval = null;
+                }
+            }
+
+            // Cleanup ao fechar página
+            window.addEventListener('beforeunload', stopPolling);
+        })();
     </script>
 </body>
 </html>
