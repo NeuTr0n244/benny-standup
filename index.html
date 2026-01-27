@@ -411,102 +411,136 @@
             to { transform: scaleY(1); }
         }
 
-        /* ===== CHAT AO VIVO ===== */
-        #chat-container {
+        /* ===== LIVE CHAT (Firebase) ===== */
+        #live-chat {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 350px;
-            z-index: 1000;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        #chat-toggle {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #ff2d95, #ff6b6b);
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
+            width: 320px;
+            height: 450px;
+            background: rgba(30, 30, 30, 0.85);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 4px 20px rgba(255, 46, 149, 0.4);
-            transition: all 0.3s ease;
-        }
-
-        #chat-toggle:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 30px rgba(255, 46, 149, 0.6);
-        }
-
-        #chat-box {
-            display: none;
             flex-direction: column;
-            height: 500px;
-            background: rgba(10, 10, 15, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
+            font-family: 'Outfit', sans-serif;
+            z-index: 1000;
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
-            margin-bottom: 10px;
         }
 
-        #chat-box.open {
-            display: flex;
+        #live-chat.minimized {
+            height: auto;
         }
 
+        /* Header do chat */
         #chat-header {
-            padding: 16px;
-            background: linear-gradient(135deg, #ff2d95, #ff6b6b);
-            color: white;
+            background: rgba(40, 40, 40, 0.9);
+            padding: 14px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        #chat-header h3 {
-            margin: 0;
+        #chat-title {
+            color: #fff;
             font-size: 16px;
             font-weight: 600;
+            margin: 0;
         }
 
-        #chat-close {
+        #chat-minimize {
             background: none;
             border: none;
-            color: white;
-            font-size: 24px;
+            color: #fff;
+            font-size: 20px;
             cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
+            padding: 4px 8px;
+            border-radius: 4px;
             transition: background 0.3s ease;
         }
 
-        #chat-close:hover {
-            background: rgba(255, 255, 255, 0.2);
+        #chat-minimize:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Tela de entrada (username) */
+        #chat-login {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 24px;
+            text-align: center;
+        }
+
+        #chat-login.hidden {
+            display: none;
+        }
+
+        #chat-login h3 {
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 24px;
+        }
+
+        #username-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(50, 50, 50, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 16px;
+        }
+
+        #username-input:focus {
+            outline: none;
+            border-color: #ff2d95;
+        }
+
+        #enter-chat-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #ff2d95, #ff6b6b);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        #enter-chat-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Área de mensagens */
+        #chat-main {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+        }
+
+        #chat-main.active {
+            display: flex;
         }
 
         #chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 16px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
         }
 
         #chat-messages::-webkit-scrollbar {
-            width: 6px;
+            width: 5px;
         }
 
         #chat-messages::-webkit-scrollbar-track {
@@ -514,165 +548,79 @@
         }
 
         #chat-messages::-webkit-scrollbar-thumb {
-            background: rgba(255, 46, 149, 0.5);
+            background: rgba(255, 46, 149, 0.4);
             border-radius: 3px;
         }
 
-        .chat-message {
-            padding: 10px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            border-left: 3px solid #ff2d95;
+        .message {
+            padding: 8px 10px;
+            background: rgba(50, 50, 50, 0.6);
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.4;
         }
 
-        .chat-message-time {
+        .message-time {
             font-size: 10px;
             color: rgba(255, 255, 255, 0.4);
             margin-bottom: 4px;
         }
 
-        .chat-message-nickname {
+        .message-user {
             font-weight: 600;
             color: #ff2d95;
             margin-right: 6px;
         }
 
-        .chat-message-text {
+        .message-text {
             color: rgba(255, 255, 255, 0.9);
-            font-size: 14px;
             word-wrap: break-word;
         }
 
-        #chat-input-container {
-            padding: 16px;
-            background: rgba(0, 0, 0, 0.3);
+        /* Input de mensagem */
+        #chat-input-area {
+            padding: 12px;
+            background: rgba(40, 40, 40, 0.9);
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             gap: 8px;
         }
 
-        #chat-input {
+        #message-input {
             flex: 1;
-            padding: 10px 12px;
-            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            background: rgba(50, 50, 50, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
             font-family: 'Outfit', sans-serif;
-            font-size: 14px;
         }
 
-        #chat-input:focus {
+        #message-input:focus {
             outline: none;
             border-color: #ff2d95;
-            background: rgba(255, 255, 255, 0.15);
         }
 
-        #chat-send {
-            padding: 10px 20px;
+        #send-btn {
+            padding: 10px 16px;
             background: linear-gradient(135deg, #ff2d95, #ff6b6b);
             border: none;
-            border-radius: 8px;
-            color: white;
+            border-radius: 6px;
+            color: #fff;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.2s ease;
         }
 
-        #chat-send:hover {
+        #send-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 46, 149, 0.4);
         }
 
-        #chat-send:disabled {
+        #send-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
-        }
-
-        /* Nickname Modal */
-        #nickname-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
-
-        #nickname-modal.show {
-            display: flex;
-        }
-
-        #nickname-form {
-            background: rgba(10, 10, 15, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 32px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-
-        #nickname-form h3 {
-            color: white;
-            margin-bottom: 8px;
-            font-size: 24px;
-        }
-
-        #nickname-form p {
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 24px;
-            font-size: 14px;
-        }
-
-        #nickname-input {
-            width: 100%;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
-            font-family: 'Outfit', sans-serif;
-            font-size: 16px;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-
-        #nickname-input:focus {
-            outline: none;
-            border-color: #ff2d95;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        #nickname-submit {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #ff2d95, #ff6b6b);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        #nickname-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(255, 46, 149, 0.4);
-        }
-
-        #chat-empty {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 14px;
-            padding: 40px 20px;
         }
 
     </style>
@@ -1485,243 +1433,207 @@
         init();
     </script>
 
-    <!-- ===== CHAT AO VIVO ===== -->
-    <div id="chat-container">
-        <div id="chat-box">
-            <div id="chat-header">
-                <h3>💬 Live Chat</h3>
-                <button id="chat-close">×</button>
-            </div>
-            <div id="chat-messages">
-                <div id="chat-empty">Seja o primeiro a enviar uma mensagem!</div>
-            </div>
-            <div id="chat-input-container">
-                <input
-                    type="text"
-                    id="chat-input"
-                    placeholder="Digite sua mensagem..."
-                    maxlength="500"
-                    disabled
-                />
-                <button id="chat-send" disabled>Enviar</button>
-            </div>
+    <!-- ===== LIVE CHAT COM FIREBASE ===== -->
+    <div id="live-chat">
+        <!-- Header -->
+        <div id="chat-header">
+            <h3 id="chat-title">💬 Live Chat</h3>
+            <button id="chat-minimize">−</button>
         </div>
-        <button id="chat-toggle">💬</button>
-    </div>
 
-    <!-- Modal de Nickname -->
-    <div id="nickname-modal">
-        <div id="nickname-form">
-            <h3>Entrar no Chat</h3>
-            <p>Escolha um nickname para participar da conversa</p>
+        <!-- Tela de Login (Username) -->
+        <div id="chat-login">
+            <h3>Chat ao Vivo</h3>
             <input
                 type="text"
-                id="nickname-input"
-                placeholder="Seu nickname..."
+                id="username-input"
+                placeholder="Digite seu username..."
                 maxlength="20"
             />
-            <button id="nickname-submit">Entrar no Chat</button>
+            <button id="enter-chat-btn">Entrar</button>
+        </div>
+
+        <!-- Tela Principal do Chat -->
+        <div id="chat-main">
+            <div id="chat-messages"></div>
+            <div id="chat-input-area">
+                <input
+                    type="text"
+                    id="message-input"
+                    placeholder="Digite sua mensagem..."
+                    maxlength="300"
+                />
+                <button id="send-btn">Enviar</button>
+            </div>
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
     <script>
-        // ===== SISTEMA DE CHAT AO VIVO =====
+        // ===== FIREBASE LIVE CHAT SYSTEM =====
         (function() {
-            const chatContainer = document.getElementById('chat-container');
-            const chatBox = document.getElementById('chat-box');
-            const chatToggle = document.getElementById('chat-toggle');
-            const chatClose = document.getElementById('chat-close');
+            // CONFIGURAÇÃO FIREBASE (substituir pelas suas credenciais)
+            const firebaseConfig = {
+                apiKey: "YOUR_FIREBASE_API_KEY",
+                authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
+                databaseURL: "YOUR_FIREBASE_DATABASE_URL",
+                projectId: "YOUR_FIREBASE_PROJECT_ID"
+            };
+
+            // Inicializar Firebase
+            let database;
+            let messagesRef;
+
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                database = firebase.database();
+                messagesRef = database.ref('chat/messages');
+                console.log('✅ Firebase inicializado com sucesso');
+            } catch (error) {
+                console.error('❌ Erro ao inicializar Firebase:', error);
+            }
+
+            // Elementos DOM
+            const chatLogin = document.getElementById('chat-login');
+            const chatMain = document.getElementById('chat-main');
+            const usernameInput = document.getElementById('username-input');
+            const enterChatBtn = document.getElementById('enter-chat-btn');
             const chatMessages = document.getElementById('chat-messages');
-            const chatInput = document.getElementById('chat-input');
-            const chatSend = document.getElementById('chat-send');
-            const chatEmpty = document.getElementById('chat-empty');
+            const messageInput = document.getElementById('message-input');
+            const sendBtn = document.getElementById('send-btn');
+            const chatMinimize = document.getElementById('chat-minimize');
+            const liveChat = document.getElementById('live-chat');
 
-            const nicknameModal = document.getElementById('nickname-modal');
-            const nicknameInput = document.getElementById('nickname-input');
-            const nicknameSubmit = document.getElementById('nickname-submit');
+            let currentUsername = null;
 
-            let userNickname = null;
-            let pollingInterval = null;
-            let lastMessageId = null;
-
-            // Verificar se já tem nickname salvo
-            const savedNickname = localStorage.getItem('chat_nickname');
-            if (savedNickname) {
-                userNickname = savedNickname;
-                enableChat();
+            // Verificar se já tem username salvo
+            const savedUsername = localStorage.getItem('chat_username');
+            if (savedUsername) {
+                enterChat(savedUsername);
             }
 
-            // Toggle chat
-            chatToggle.addEventListener('click', () => {
-                if (!userNickname) {
-                    nicknameModal.classList.add('show');
-                } else {
-                    chatBox.classList.add('open');
-                    chatToggle.style.display = 'none';
-                    loadMessages();
-                    startPolling();
-                }
-            });
-
-            // Fechar chat
-            chatClose.addEventListener('click', () => {
-                chatBox.classList.remove('open');
-                chatToggle.style.display = 'flex';
-                stopPolling();
-            });
-
-            // Nickname modal
-            nicknameSubmit.addEventListener('click', submitNickname);
-            nicknameInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') submitNickname();
-            });
-
-            function submitNickname() {
-                const nickname = nicknameInput.value.trim();
-                if (!nickname) {
-                    alert('Por favor, digite um nickname');
+            // Entrar no chat
+            enterChatBtn.addEventListener('click', () => {
+                const username = usernameInput.value.trim();
+                if (!username) {
+                    alert('Por favor, digite um username');
                     return;
                 }
-                if (nickname.length > 20) {
-                    alert('Nickname muito longo (max 20 caracteres)');
+                if (username.length > 20) {
+                    alert('Username muito longo (máx 20 caracteres)');
                     return;
                 }
+                enterChat(username);
+            });
 
-                userNickname = nickname;
-                localStorage.setItem('chat_nickname', nickname);
-                nicknameModal.classList.remove('show');
-                chatBox.classList.add('open');
-                chatToggle.style.display = 'none';
-                enableChat();
+            usernameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') enterChatBtn.click();
+            });
+
+            function enterChat(username) {
+                currentUsername = username;
+                localStorage.setItem('chat_username', username);
+                chatLogin.classList.add('hidden');
+                chatMain.classList.add('active');
+
+                // Carregar mensagens e escutar mudanças
                 loadMessages();
-                startPolling();
             }
 
-            function enableChat() {
-                chatInput.disabled = false;
-                chatSend.disabled = false;
+            // Carregar mensagens do Firebase
+            function loadMessages() {
+                if (!messagesRef) {
+                    console.error('Firebase não inicializado');
+                    return;
+                }
+
+                // Buscar últimas 50 mensagens
+                messagesRef.limitToLast(50).on('value', (snapshot) => {
+                    chatMessages.innerHTML = '';
+
+                    if (!snapshot.exists()) {
+                        chatMessages.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.4); padding: 40px 20px; font-size: 13px;">Seja o primeiro a enviar uma mensagem!</div>';
+                        return;
+                    }
+
+                    snapshot.forEach((childSnapshot) => {
+                        const msg = childSnapshot.val();
+                        renderMessage(msg);
+                    });
+
+                    // Auto-scroll para o final
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                });
+            }
+
+            // Renderizar uma mensagem
+            function renderMessage(msg) {
+                const messageEl = document.createElement('div');
+                messageEl.className = 'message';
+
+                const time = new Date(msg.timestamp).toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                messageEl.innerHTML = `
+                    <div class="message-time">${time}</div>
+                    <span class="message-user">${escapeHtml(msg.username)}:</span>
+                    <span class="message-text">${escapeHtml(msg.text)}</span>
+                `;
+
+                chatMessages.appendChild(messageEl);
             }
 
             // Enviar mensagem
-            chatSend.addEventListener('click', sendMessage);
-            chatInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
+            sendBtn.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
             });
 
-            async function sendMessage() {
-                const message = chatInput.value.trim();
-                if (!message || !userNickname) return;
+            function sendMessage() {
+                const text = messageInput.value.trim();
+                if (!text || !currentUsername) return;
 
-                chatSend.disabled = true;
-                chatInput.disabled = true;
+                if (!messagesRef) {
+                    alert('Firebase não está configurado. Adicione suas credenciais.');
+                    return;
+                }
 
-                try {
-                    const response = await fetch('/api/chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            nickname: userNickname,
-                            message: message
-                        })
+                const message = {
+                    username: currentUsername,
+                    text: text,
+                    timestamp: Date.now()
+                };
+
+                messagesRef.push(message)
+                    .then(() => {
+                        messageInput.value = '';
+                        messageInput.focus();
+                    })
+                    .catch((error) => {
+                        console.error('Erro ao enviar mensagem:', error);
+                        alert('Erro ao enviar mensagem');
                     });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        chatInput.value = '';
-                        loadMessages();
-                    } else {
-                        alert('Erro ao enviar mensagem: ' + data.error);
-                    }
-                } catch (error) {
-                    console.error('Erro ao enviar mensagem:', error);
-                    alert('Erro ao enviar mensagem');
-                } finally {
-                    chatSend.disabled = false;
-                    chatInput.disabled = false;
-                    chatInput.focus();
-                }
             }
 
-            // Carregar mensagens
-            async function loadMessages() {
-                try {
-                    const response = await fetch('/api/chat');
-                    const data = await response.json();
+            // Minimizar chat
+            chatMinimize.addEventListener('click', () => {
+                liveChat.classList.toggle('minimized');
+                chatMinimize.textContent = liveChat.classList.contains('minimized') ? '+' : '−';
+            });
 
-                    if (data.success && data.messages.length > 0) {
-                        chatEmpty.style.display = 'none';
-                        renderMessages(data.messages);
-                    } else {
-                        chatEmpty.style.display = 'block';
-                    }
-                } catch (error) {
-                    console.error('Erro ao carregar mensagens:', error);
-                }
-            }
-
-            // Renderizar mensagens
-            function renderMessages(messages) {
-                // Remover mensagens antigas (manter apenas chat-empty)
-                const oldMessages = chatMessages.querySelectorAll('.chat-message');
-                oldMessages.forEach(msg => msg.remove());
-
-                // Adicionar novas mensagens
-                messages.forEach(msg => {
-                    const messageEl = document.createElement('div');
-                    messageEl.className = 'chat-message';
-                    messageEl.dataset.id = msg.id;
-
-                    const time = new Date(msg.timestamp).toLocaleTimeString('pt-BR', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-
-                    messageEl.innerHTML = `
-                        <div class="chat-message-time">${time}</div>
-                        <div>
-                            <span class="chat-message-nickname">${escapeHtml(msg.nickname)}:</span>
-                            <span class="chat-message-text">${escapeHtml(msg.message)}</span>
-                        </div>
-                    `;
-
-                    chatMessages.appendChild(messageEl);
-                });
-
-                // Scroll para o final
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                // Atualizar último ID
-                if (messages.length > 0) {
-                    lastMessageId = messages[messages.length - 1].id;
-                }
-            }
-
-            // Escape HTML para segurança
+            // Escape HTML
             function escapeHtml(text) {
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
             }
-
-            // Polling para novas mensagens
-            function startPolling() {
-                if (pollingInterval) return;
-                pollingInterval = setInterval(loadMessages, 3000); // A cada 3 segundos
-            }
-
-            function stopPolling() {
-                if (pollingInterval) {
-                    clearInterval(pollingInterval);
-                    pollingInterval = null;
-                }
-            }
-
-            // Cleanup ao fechar página
-            window.addEventListener('beforeunload', stopPolling);
         })();
     </script>
 </body>
