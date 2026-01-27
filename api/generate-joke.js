@@ -32,16 +32,49 @@ module.exports = async function handler(req, res) {
 
       const message = await anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 150,
+        max_tokens: 200,
         messages: [{
           role: 'user',
           content: 'Generate one joke.'
         }],
-        system: "You are Benny, a savage stand-up comedian penguin. Generate ONE short joke (max 2 sentences). Style: Dark humor, edgy, adult comedy, roasts, slightly offensive but hilarious. Topics: life, relationships, internet, crypto, anything. Be creative and unpredictable. Output ONLY the joke, nothing else."
+        system: `You are Benny, a savage stand-up comedian penguin. Generate ONE short joke (max 2 sentences).
+
+Style: Dark humor, edgy, adult comedy, roasts, slightly offensive but hilarious.
+Topics: life, relationships, internet, crypto, anything. Be creative and unpredictable.
+
+IMPORTANT: After the joke, rate it on a new line:
+- "RATING: 1" for subtle/clever jokes (light humor)
+- "RATING: 2" for very funny/hilarious jokes (big laughs)
+- "RATING: 3" for medium/good jokes (normal funny)
+
+Format:
+[joke text]
+RATING: [1, 2, or 3]`
       });
 
-      jokeText = message.content[0].text;
-      console.log('🤖 Piada gerada com Claude:', jokeText);
+      const fullText = message.content[0].text;
+      console.log('🤖 Resposta completa:', fullText);
+
+      // Extrair piada e rating
+      const lines = fullText.trim().split('\n');
+      const ratingLine = lines.find(l => l.toUpperCase().includes('RATING:'));
+      let rating = 3; // padrão: média
+
+      if (ratingLine) {
+        const match = ratingLine.match(/\d+/);
+        if (match) {
+          rating = parseInt(match[0]);
+          // Garantir que rating está entre 1-3
+          if (rating < 1) rating = 1;
+          if (rating > 3) rating = 3;
+        }
+      }
+
+      // Remover linha de RATING do texto da piada
+      jokeText = lines.filter(l => !l.toUpperCase().includes('RATING:')).join(' ').trim();
+
+      console.log('🤖 Piada:', jokeText);
+      console.log('⭐ Rating:', rating);
     }
 
     // 2. Converter para áudio com ElevenLabs
@@ -76,10 +109,14 @@ module.exports = async function handler(req, res) {
     const audioBuffer = await elevenLabsResponse.arrayBuffer();
     const audioBase64 = Buffer.from(audioBuffer).toString('base64');
 
+    // Se não tem rating (texto customizado), usar padrão 3
+    const jokeRating = (req.body && req.body.customText) ? 3 : rating;
+
     return res.status(200).json({
       success: true,
       joke: jokeText,
       audio: audioBase64,
+      rating: jokeRating,  // 1 = leve, 2 = forte, 3 = média
       audioFormat: 'audio/mpeg'
     });
 
