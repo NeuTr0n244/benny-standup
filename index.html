@@ -426,6 +426,14 @@
             font-family: 'Outfit', sans-serif;
             z-index: 1000;
             overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        #live-chat.visible {
+            opacity: 1;
+            pointer-events: auto;
         }
 
         #live-chat.minimized {
@@ -791,6 +799,7 @@
         const navButtons = document.querySelectorAll('.nav-btn');
         const aboutPanel = document.getElementById('about-panel');
         const communityPanel = document.getElementById('community-panel');
+        const liveChat = document.getElementById('live-chat');
         const laughVisualizer = document.getElementById('laugh-visualizer');
         const contractAddressEl = document.getElementById('contract-address');
         const copyBtn = document.getElementById('copy-btn');
@@ -1360,6 +1369,7 @@
 
             aboutPanel.classList.remove('visible');
             communityPanel.classList.remove('visible');
+            liveChat.classList.remove('visible');
 
             // ===== TROCA DE CÂMERA BASEADO NA VIEW =====
             // Procura câmera pelo nome (about, community, home)
@@ -1406,6 +1416,8 @@
                 setTimeout(() => aboutPanel.classList.add('visible'), 500);
             } else if (view === 'community') {
                 setTimeout(() => communityPanel.classList.add('visible'), 500);
+            } else if (view === 'home') {
+                setTimeout(() => liveChat.classList.add('visible'), 500);
             }
         }
 
@@ -1470,14 +1482,14 @@
 
         <!-- Tela de Login (Username) -->
         <div id="chat-login">
-            <h3>Chat ao Vivo</h3>
+            <h3>Live Chat</h3>
             <input
                 type="text"
                 id="username-input"
-                placeholder="Digite seu username..."
+                placeholder="Enter your nickname..."
                 maxlength="20"
             />
-            <button id="enter-chat-btn">Entrar</button>
+            <button id="enter-chat-btn">JOIN</button>
         </div>
 
         <!-- Tela Principal do Chat -->
@@ -1487,10 +1499,10 @@
                 <input
                     type="text"
                     id="message-input"
-                    placeholder="Digite sua mensagem..."
+                    placeholder="Type your message..."
                     maxlength="300"
                 />
-                <button id="send-btn">Enviar</button>
+                <button id="send-btn">SEND</button>
             </div>
         </div>
     </div>
@@ -1587,7 +1599,7 @@
                     chatMessages.innerHTML = '';
 
                     if (!snapshot.exists()) {
-                        chatMessages.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.4); padding: 40px 20px; font-size: 13px;">Seja o primeiro a enviar uma mensagem!</div>';
+                        chatMessages.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.4); padding: 40px 20px; font-size: 13px;">Be the first to send a message!</div>';
                         return;
                     }
 
@@ -1606,7 +1618,7 @@
                 const messageEl = document.createElement('div');
                 messageEl.className = 'message';
 
-                const time = new Date(msg.timestamp).toLocaleTimeString('pt-BR', {
+                const time = new Date(msg.timestamp).toLocaleTimeString('en-US', {
                     hour: '2-digit',
                     minute: '2-digit'
                 });
@@ -1647,8 +1659,8 @@
                         messageInput.focus();
                     })
                     .catch((error) => {
-                        console.error('Erro ao enviar mensagem:', error);
-                        alert('Erro ao enviar mensagem');
+                        console.error('Error sending message:', error);
+                        alert('Error sending message');
                     });
             }
 
