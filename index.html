@@ -756,6 +756,7 @@
         let jokeInterval;
         let currentJokeIndex = 0;
         let isAudioUnlocked = false;
+        let firebaseReady = false; // Flag que indica se Firebase está 100% pronto
         
         // Câmeras do GLB
         let glbCameras = {};
@@ -1096,6 +1097,28 @@
             );
         }
 
+        // Aguarda Firebase estar 100% pronto antes de usar
+        async function waitForFirebase() {
+            return new Promise((resolve) => {
+                const checkFirebase = setInterval(() => {
+                    if (firebaseReady && currentJokeRef) {
+                        clearInterval(checkFirebase);
+                        console.log('✅ Firebase verificado e pronto para uso!');
+                        resolve();
+                    }
+                }, 100); // Verifica a cada 100ms
+
+                // Timeout de segurança (10 segundos)
+                setTimeout(() => {
+                    clearInterval(checkFirebase);
+                    if (!firebaseReady) {
+                        console.error('⚠️ Timeout: Firebase demorou muito para inicializar');
+                    }
+                    resolve(); // Resolve mesmo com erro para não travar
+                }, 10000);
+            });
+        }
+
         function openCurtains() {
             setTimeout(() => {
                 loadingOverlay.classList.add('hidden');
@@ -1106,10 +1129,14 @@
                     liveChat.classList.add('visible');
                 }, 500);
 
-                // Inicia automaticamente em 2 segundos após carregar
+                // Inicia automaticamente APÓS Firebase estar pronto
                 if (AUTO_START) {
-                    console.log('🎬 Iniciando Benny automaticamente...');
-                    setTimeout(() => initializeBenny(), 2000);
+                    console.log('🎬 Aguardando Firebase inicializar...');
+                    setTimeout(async () => {
+                        await waitForFirebase();
+                        console.log('🎭 Firebase pronto! Iniciando Benny...');
+                        initializeBenny();
+                    }, 2000);
                 }
             }, 500);
         }
@@ -1339,8 +1366,10 @@
                 return;
             }
 
-            if (!currentJokeRef) {
+            // Verificação dupla: firebaseReady E currentJokeRef
+            if (!firebaseReady || !currentJokeRef) {
                 console.error('❌ Firebase não inicializado! Aguarde o carregamento completo.');
+                console.log('🔍 Status: firebaseReady =', firebaseReady, ', currentJokeRef =', !!currentJokeRef);
                 return;
             }
 
@@ -1624,9 +1653,14 @@
 
                 // Inicializar referência para piadas sincronizadas
                 currentJokeRef = database.ref('currentJoke');
+
+                // Marcar Firebase como pronto
+                firebaseReady = true;
                 console.log('✅ Firebase inicializado com sucesso (Chat + Jokes Sync)');
+                console.log('🔥 firebaseReady = true');
             } catch (error) {
                 console.error('❌ Erro ao inicializar Firebase:', error);
+                firebaseReady = false;
             }
 
             // Elementos DOM
