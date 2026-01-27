@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mr. Penguin Stand-Up Comedy</title>
+    <title>Benny</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1124,6 +1124,11 @@
             setTimeout(() => {
                 loadingOverlay.classList.add('hidden');
                 curtains.classList.add('open');
+
+                // Mostra o chat junto com os botões (apenas na HOME, que é a view inicial)
+                setTimeout(() => {
+                    liveChat.classList.add('visible');
+                }, 500);
 
                 // Inicia automaticamente em 2 segundos após carregar
                 if (AUTO_START) {
