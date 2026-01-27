@@ -27,7 +27,9 @@
       "Bash(git push:*)",
       "Bash(git rm:*)",
       "Bash(git checkout:*)",
-      "Bash(powershell -Command \"Start-Process ''https://vercel.com/vito01hugo02-9635s-projects/standup/settings/git''\")"
+      "Bash(powershell -Command \"Start-Process ''https://vercel.com/vito01hugo02-9635s-projects/standup/settings/git''\")",
+      "Bash(taskkill //F //PID 8437)",
+      "Bash(xargs kill:*)"
     ]
   }
 }

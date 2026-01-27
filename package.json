@@ -2,14 +2,12 @@
   "name": "benny-standup",
   "version": "1.0.0",
   "description": "Benny the Penguin - AI Stand-Up Comedy with Three.js",
-  "type": "module",
   "scripts": {
-    "dev": "vercel dev",
-    "build": "vercel build",
     "deploy": "vercel --prod"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.32.1"
+    "@anthropic-ai/sdk": "^0.32.1",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "vercel": "^37.0.0"

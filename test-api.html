@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API - Benny Jokes</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0a0a0f;
+            color: #fff;
+        }
+        h1 {
+            color: #ff2d95;
+            text-align: center;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        button {
+            background: linear-gradient(135deg, #ff2d95, #ffea00);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        button:hover {
+            transform: scale(1.02);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .result {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+        .error {
+            border-color: #ff2d95;
+            color: #ff2d95;
+        }
+        .joke-text {
+            font-size: 18px;
+            color: #ffea00;
+            margin: 15px 0;
+            font-style: italic;
+        }
+        #status {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .loading {
+            background: rgba(255, 234, 0, 0.2);
+            color: #ffea00;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎭 Test Benny API</h1>
+
+    <div class="test-section">
+        <h2>API Endpoint Test</h2>
+        <p><strong>URL:</strong> <span id="api-url">http://localhost:3000/api/generate-joke</span></p>
+        <p><strong>Method:</strong> POST</p>
+
+        <button id="test-btn" onclick="testAPI()">🎤 Generate Joke</button>
+
+        <div id="status"></div>
+        <div id="result"></div>
+        <div id="joke-display"></div>
+        <audio id="audio-player" controls style="width: 100%; margin-top: 10px; display: none;"></audio>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 How to Use</h2>
+        <ol>
+            <li>Start local server: <code>vercel dev</code></li>
+            <li>Open this file in browser</li>
+            <li>Click "Generate Joke" button</li>
+            <li>Check the result below</li>
+        </ol>
+    </div>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const resultEl = document.getElementById('result');
+        const jokeDisplayEl = document.getElementById('joke-display');
+        const audioPlayer = document.getElementById('audio-player');
+        const testBtn = document.getElementById('test-btn');
+
+        async function testAPI() {
+            testBtn.disabled = true;
+            statusEl.className = 'loading';
+            statusEl.textContent = '⏳ Generating joke... This may take 5-10 seconds';
+            resultEl.textContent = '';
+            jokeDisplayEl.textContent = '';
+            audioPlayer.style.display = 'none';
+
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch('http://localhost:3000/api/generate-joke', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+                const data = await response.json();
+
+                resultEl.className = 'result';
+                resultEl.textContent = JSON.stringify(data, null, 2);
+
+                if (response.ok && data.success) {
+                    statusEl.className = '';
+                    statusEl.style.background = 'rgba(0, 255, 136, 0.2)';
+                    statusEl.style.color = '#00ff88';
+                    statusEl.textContent = `✅ Success! (${duration}s)`;
+
+                    // Show joke
+                    jokeDisplayEl.className = 'joke-text';
+                    jokeDisplayEl.textContent = `"${data.joke}"`;
+
+                    // Play audio
+                    if (data.audio) {
+                        const audioBlob = base64ToBlob(data.audio, 'audio/mpeg');
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        audioPlayer.src = audioUrl;
+                        audioPlayer.style.display = 'block';
+                        audioPlayer.play();
+                    }
+                } else {
+                    throw new Error(data.message || 'API returned error');
+                }
+
+            } catch (error) {
+                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+                statusEl.className = '';
+                statusEl.style.background = 'rgba(255, 45, 149, 0.2)';
+                statusEl.style.color = '#ff2d95';
+                statusEl.textContent = `❌ Error (${duration}s)`;
+
+                resultEl.className = 'result error';
+                resultEl.textContent = `Error: ${error.message}\n\nStack: ${error.stack}`;
+            } finally {
+                testBtn.disabled = false;
+            }
+        }
+
+        function base64ToBlob(base64, type) {
+            const binary = atob(base64);
+            const array = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                array[i] = binary.charCodeAt(i);
+            }
+            return new Blob([array], { type });
+        }
+
+        // Check if API is reachable
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('http://localhost:3000/api/generate-joke', {
+                    method: 'OPTIONS'
+                });
+
+                if (response.ok) {
+                    statusEl.style.background = 'rgba(0, 255, 136, 0.2)';
+                    statusEl.style.color = '#00ff88';
+                    statusEl.textContent = '✅ API is reachable!';
+                } else {
+                    statusEl.style.background = 'rgba(255, 165, 0, 0.2)';
+                    statusEl.style.color = '#ffa500';
+                    statusEl.textContent = '⚠️ API responded but with status: ' + response.status;
+                }
+            } catch (error) {
+                statusEl.style.background = 'rgba(255, 45, 149, 0.2)';
+                statusEl.style.color = '#ff2d95';
+                statusEl.textContent = '❌ Cannot reach API. Is vercel dev running?';
+            }
+        });
+    </script>
+</body>
+</html>

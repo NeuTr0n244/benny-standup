@@ -1,6 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk';
+const Anthropic = require('@anthropic-ai/sdk');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -35,6 +35,7 @@ export default async function handler(req, res) {
     const jokeText = message.content[0].text;
 
     // 2. Converter para áudio com ElevenLabs
+    const fetch = (await import('node-fetch')).default;
     const elevenLabsResponse = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/fIGaHjfrR8KmMy0vGEVJ`,
       {
@@ -78,4 +79,4 @@ export default async function handler(req, res) {
       message: error.message
     });
   }
-}
+};
