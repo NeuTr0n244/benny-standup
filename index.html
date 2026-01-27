@@ -775,6 +775,8 @@
         let scene, camera, renderer, mixer, model;
         let currentView = 'home';
         let isMuted = false;
+        let currentAudioVolume = 1.0; // Volume baseado na aba (1.0 = HOME, 0.25 = ABOUT/COMMUNITY)
+        let currentJokeAudio = null; // Referência ao áudio atual para ajustar volume em tempo real
         let audioContext, laughBuffer;
         let jokeInterval;
         let currentJokeIndex = 0;
@@ -1260,10 +1262,13 @@
 
                 // Criar e tocar áudio
                 const audio = new Audio(audioUrl);
+                audio.volume = currentAudioVolume; // Aplica volume baseado na aba
+                currentJokeAudio = audio; // Guarda referência para ajuste em tempo real
 
                 // Quando terminar
                 audio.addEventListener('ended', () => {
                     URL.revokeObjectURL(audioUrl);
+                    currentJokeAudio = null; // Limpa referência
                     isPlayingJoke = false;
 
                     // Próxima piada IMEDIATAMENTE
@@ -1276,6 +1281,7 @@
                 audio.addEventListener('error', (e) => {
                     console.error('❌ Erro ao tocar áudio:', e);
                     URL.revokeObjectURL(audioUrl);
+                    currentJokeAudio = null; // Limpa referência
                     isPlayingJoke = false;
 
                     // Tentar próxima piada
@@ -1290,6 +1296,7 @@
 
             } catch (error) {
                 console.error('❌ Erro ao tocar piada:', error);
+                currentJokeAudio = null; // Limpa referência
                 isPlayingJoke = false;
 
                 // Tentar próxima piada
@@ -1358,6 +1365,32 @@
         }
         */
 
+        // ===== AJUSTE DE VOLUME BASEADO NA ABA =====
+        function smoothVolumeTransition(targetVolume, duration = 500) {
+            const startVolume = currentAudioVolume;
+            const startTime = Date.now();
+
+            function updateVolume() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1.0);
+
+                // Interpolação linear do volume
+                currentAudioVolume = startVolume + (targetVolume - startVolume) * progress;
+
+                // Aplica ao áudio atual se estiver tocando
+                if (currentJokeAudio) {
+                    currentJokeAudio.volume = currentAudioVolume;
+                }
+
+                // Continua a transição se não terminou
+                if (progress < 1.0) {
+                    requestAnimationFrame(updateVolume);
+                }
+            }
+
+            updateVolume();
+        }
+
         // ===== NAVEGAÇÃO =====
         function changeView(view) {
             if (view === currentView) return;
@@ -1370,6 +1403,12 @@
             aboutPanel.classList.remove('visible');
             communityPanel.classList.remove('visible');
             liveChat.classList.remove('visible');
+
+            // ===== AJUSTE DE VOLUME BASEADO NA ABA =====
+            // HOME: volume alto (100%) - som próximo
+            // ABOUT/COMMUNITY: volume baixo (25%) - som ao longe
+            const targetVolume = view === 'home' ? 1.0 : 0.25;
+            smoothVolumeTransition(targetVolume, 500);
 
             // ===== TROCA DE CÂMERA BASEADO NA VIEW =====
             // Procura câmera pelo nome (about, community, home)
