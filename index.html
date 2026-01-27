@@ -497,7 +497,7 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
         // ===== CONFIGURAÇÃO =====
-        const AUTO_START = false; // MANTER FALSE - só ativar quando lançar
+        const AUTO_START = true; // ATIVADO - Sistema inicia automaticamente no lançamento
 
         const CONFIG = {
             // GLB hosted on Cloudflare R2 - No CORS issues, fast CDN delivery
@@ -875,12 +875,10 @@
                 loadingOverlay.classList.add('hidden');
                 curtains.classList.add('open');
 
-                // Só inicia automaticamente se AUTO_START = true
+                // Inicia automaticamente em 2 segundos após carregar
                 if (AUTO_START) {
-                    console.log('🎬 AUTO_START ativado - Benny começará a contar piadas');
-                    setTimeout(() => window.startBenny(), 2000);
-                } else {
-                    console.log('🎬 AUTO_START desativado - Digite startBenny() no console para ativar');
+                    console.log('🎬 Iniciando Benny automaticamente...');
+                    setTimeout(() => initializeBenny(), 2000);
                 }
             }, 500);
         }
@@ -1053,14 +1051,13 @@
             }
         }
 
-        // ===== FUNÇÕES DE CONTROLE PÚBLICO (via console) =====
-        window.startBenny = async function() {
+        // ===== FUNÇÃO INTERNA DE INICIALIZAÇÃO (não acessível via console) =====
+        async function initializeBenny() {
             if (jokeLoopEnabled) {
-                console.log('⚠️ Benny já está ativo!');
                 return;
             }
             jokeLoopEnabled = true;
-            console.log('🎭 Sistema de piadas ativado!');
+            console.log('🎭 Sistema de piadas ativado automaticamente!');
             console.log('📦 Pré-carregando buffer inicial (2 piadas)...');
 
             // Pré-carregar 2 piadas antes de começar
@@ -1069,13 +1066,11 @@
 
             console.log('✅ Buffer pronto! Iniciando Benny...');
             playNextJoke();
-        };
+        }
 
-        window.stopBenny = function() {
-            jokeLoopEnabled = false;
-            console.log('⏸️ Sistema de piadas pausado. Benny foi silenciado.');
-            console.log(`📊 Buffer atual: ${jokeBuffer.length} piadas`);
-        };
+        // ===== FUNÇÕES DE CONTROLE BLOQUEADAS =====
+        // Controles removidos da produção - sistema roda automaticamente
+        // window.startBenny e window.stopBenny foram removidos para segurança
 
         // ===== PIADAS (DESATIVADO) =====
         /*
