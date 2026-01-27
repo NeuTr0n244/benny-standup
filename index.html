@@ -1131,8 +1131,21 @@
         }
 
         function unlockAudio() {
+            console.log('🔓 unlockAudio() chamada');
+            console.log('📊 Estado:', {
+                isAudioUnlocked,
+                hasAudioContext: !!audioContext,
+                audioContextState: audioContext?.state
+            });
+
             if (!isAudioUnlocked && audioContext && audioContext.state === 'suspended') {
-                audioContext.resume().then(() => { isAudioUnlocked = true; });
+                console.log('▶️ Resumindo AudioContext...');
+                audioContext.resume().then(() => {
+                    isAudioUnlocked = true;
+                    console.log('✅ AudioContext resumed! isAudioUnlocked =', isAudioUnlocked);
+                });
+            } else {
+                console.log('ℹ️ AudioContext já está ativo ou não existe');
             }
         }
 
@@ -1236,10 +1249,18 @@
 
         // Função para tocar piada sincronizada (chamada quando Firebase atualiza)
         async function playSyncedJoke(jokeData) {
+            console.log('🎵 playSyncedJoke() chamada');
+            console.log('📋 Validando dados da piada...');
+
             if (!jokeData || !jokeData.audio || !jokeData.id) {
-                console.log('⚠️ Dados de piada inválidos');
+                console.error('❌ Dados de piada inválidos:', {
+                    hasJokeData: !!jokeData,
+                    hasAudio: !!jokeData?.audio,
+                    hasId: !!jokeData?.id
+                });
                 return;
             }
+            console.log('✅ Dados válidos!');
 
             // Verificar se piada não está expirada (>60 segundos)
             if (jokeData.createdAt) {
@@ -1272,18 +1293,30 @@
             console.log(`📡 ID da piada: ${jokeData.id}`);
 
             try {
+                console.log('🔄 Convertendo base64 para áudio...');
+                console.log('📏 Tamanho do base64:', jokeData.audio.length);
+
                 // Converter base64 para audio blob
                 const audioData = atob(jokeData.audio);
+                console.log('✅ Base64 decodificado, tamanho:', audioData.length);
+
                 const audioArray = new Uint8Array(audioData.length);
                 for (let i = 0; i < audioData.length; i++) {
                     audioArray[i] = audioData.charCodeAt(i);
                 }
+                console.log('✅ Array criado');
+
                 const audioBlob = new Blob([audioArray], { type: jokeData.audioFormat || 'audio/mpeg' });
+                console.log('✅ Blob criado, tamanho:', audioBlob.size, 'tipo:', audioBlob.type);
+
                 const audioUrl = URL.createObjectURL(audioBlob);
+                console.log('✅ URL criada:', audioUrl.substring(0, 50) + '...');
 
                 // Criar e tocar áudio
+                console.log('🎧 Criando elemento Audio...');
                 const audio = new Audio(audioUrl);
                 audio.volume = currentAudioVolume; // Aplica volume baseado na aba
+                console.log('🔊 Volume configurado:', audio.volume);
                 currentJokeAudio = audio; // Guarda referência para ajuste em tempo real
 
                 // Quando terminar
@@ -1311,8 +1344,29 @@
                 });
 
                 // Desbloquear áudio e tocar
+                console.log('🔓 Desbloqueando áudio...');
                 unlockAudio();
-                await audio.play();
+                console.log('▶️ Tentando reproduzir áudio...');
+                console.log('📊 Estado do áudio:', {
+                    readyState: audio.readyState,
+                    paused: audio.paused,
+                    volume: audio.volume,
+                    src: audio.src.substring(0, 50) + '...'
+                });
+
+                await audio.play()
+                    .then(() => {
+                        console.log('🎉 ÁUDIO TOCANDO COM SUCESSO!');
+                    })
+                    .catch(err => {
+                        console.error('❌ ERRO AO TOCAR ÁUDIO:', err);
+                        console.error('📝 Detalhes do erro:', {
+                            name: err.name,
+                            message: err.message,
+                            code: err.code
+                        });
+                        throw err; // Re-throw para o catch externo
+                    });
 
             } catch (error) {
                 console.error('❌ Erro ao tocar piada:', error);
@@ -1333,9 +1387,21 @@
             currentJokeRef.on('value', (snapshot) => {
                 const jokeData = snapshot.val();
 
+                console.log('🔥 Firebase listener disparado!');
+                console.log('📦 Dados recebidos:', {
+                    hasData: !!jokeData,
+                    hasId: !!jokeData?.id,
+                    hasAudio: !!jokeData?.audio,
+                    hasText: !!jokeData?.text,
+                    audioLength: jokeData?.audio?.length,
+                    textPreview: jokeData?.text?.substring(0, 50)
+                });
+
                 if (jokeData && jokeData.id) {
                     console.log(`📩 Nova piada recebida do Firebase! ID: ${jokeData.id}`);
                     playSyncedJoke(jokeData);
+                } else {
+                    console.log('⚠️ Dados incompletos do Firebase, ignorando...');
                 }
             });
         }
@@ -1518,7 +1584,11 @@
 
         // ===== EVENTOS =====
         function setupEventListeners() {
-            document.addEventListener('click', unlockAudio, { once: true });
+            // Desbloquear áudio no primeiro clique do usuário
+            document.addEventListener('click', () => {
+                console.log('👆 Primeiro clique detectado! Desbloqueando áudio...');
+                unlockAudio();
+            }, { once: true });
 
             navButtons.forEach(btn => {
                 btn.addEventListener('click', () => changeView(btn.dataset.view));
