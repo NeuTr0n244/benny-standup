@@ -757,6 +757,7 @@
         let currentJokeIndex = 0;
         let isAudioUnlocked = false;
         let firebaseReady = false; // Flag que indica se Firebase está 100% pronto
+        let shouldAutoStart = false; // Flag que indica se deve auto-iniciar quando Firebase estiver pronto
         
         // Câmeras do GLB
         let glbCameras = {};
@@ -1097,28 +1098,6 @@
             );
         }
 
-        // Aguarda Firebase estar 100% pronto antes de usar
-        async function waitForFirebase() {
-            return new Promise((resolve) => {
-                const checkFirebase = setInterval(() => {
-                    if (firebaseReady && currentJokeRef) {
-                        clearInterval(checkFirebase);
-                        console.log('✅ Firebase verificado e pronto para uso!');
-                        resolve();
-                    }
-                }, 100); // Verifica a cada 100ms
-
-                // Timeout de segurança (10 segundos)
-                setTimeout(() => {
-                    clearInterval(checkFirebase);
-                    if (!firebaseReady) {
-                        console.error('⚠️ Timeout: Firebase demorou muito para inicializar');
-                    }
-                    resolve(); // Resolve mesmo com erro para não travar
-                }, 10000);
-            });
-        }
-
         function openCurtains() {
             setTimeout(() => {
                 loadingOverlay.classList.add('hidden');
@@ -1129,14 +1108,16 @@
                     liveChat.classList.add('visible');
                 }, 500);
 
-                // Inicia automaticamente APÓS Firebase estar pronto
+                // Marcar que deve iniciar automaticamente quando Firebase estiver pronto
                 if (AUTO_START) {
-                    console.log('🎬 Aguardando Firebase inicializar...');
-                    setTimeout(async () => {
-                        await waitForFirebase();
-                        console.log('🎭 Firebase pronto! Iniciando Benny...');
-                        initializeBenny();
-                    }, 2000);
+                    shouldAutoStart = true;
+                    console.log('🎬 Auto-start ativado. Aguardando Firebase...');
+
+                    // Se Firebase já estiver pronto, iniciar imediatamente
+                    if (firebaseReady && currentJokeRef) {
+                        console.log('🎭 Firebase já pronto! Iniciando Benny...');
+                        setTimeout(() => initializeBenny(), 2000);
+                    }
                 }
             }, 500);
         }
@@ -1366,10 +1347,9 @@
                 return;
             }
 
-            // Verificação dupla: firebaseReady E currentJokeRef
+            // Verificar se Firebase está pronto
             if (!firebaseReady || !currentJokeRef) {
-                console.error('❌ Firebase não inicializado! Aguarde o carregamento completo.');
-                console.log('🔍 Status: firebaseReady =', firebaseReady, ', currentJokeRef =', !!currentJokeRef);
+                console.error('❌ Firebase não está pronto! Status: firebaseReady =', firebaseReady, ', currentJokeRef =', !!currentJokeRef);
                 return;
             }
 
@@ -1658,6 +1638,14 @@
                 firebaseReady = true;
                 console.log('✅ Firebase inicializado com sucesso (Chat + Jokes Sync)');
                 console.log('🔥 firebaseReady = true');
+
+                // Se auto-start foi solicitado (cortinas já abriram), iniciar Benny
+                if (shouldAutoStart) {
+                    console.log('🎭 Firebase pronto + Auto-start ativado! Iniciando Benny em 2s...');
+                    setTimeout(() => {
+                        initializeBenny();
+                    }, 2000);
+                }
             } catch (error) {
                 console.error('❌ Erro ao inicializar Firebase:', error);
                 firebaseReady = false;
