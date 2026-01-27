@@ -978,17 +978,10 @@
                 audio.addEventListener('ended', () => {
                     URL.revokeObjectURL(audioUrl);
 
-                    // Aguardar 3 segundos antes da próxima piada
+                    // Próxima piada IMEDIATAMENTE (0 segundos de espera)
                     if (jokeLoopEnabled && currentView === 'home') {
-                        const delay = 3000; // 3 segundos
-                        setTimeout(() => {
-                            if (jokeLoopEnabled && currentView === 'home') {
-                                isPlayingJoke = false;
-                                playBennyJoke();
-                            } else {
-                                isPlayingJoke = false;
-                            }
-                        }, delay);
+                        isPlayingJoke = false;
+                        playBennyJoke(); // Inicia imediatamente
                     } else {
                         isPlayingJoke = false;
                     }
@@ -1008,23 +1001,17 @@
             } catch (error) {
                 console.error('❌ Erro ao gerar piada:', error);
 
-                // Sistema de retry
+                // Sistema de retry - IMEDIATO
                 if (retries > 0) {
                     console.log(`🔄 Tentando novamente... (${retries} tentativas restantes)`);
                     isPlayingJoke = false;
-                    setTimeout(() => playBennyJoke(retries - 1), 2000);
+                    playBennyJoke(retries - 1); // Retry imediato (0 segundos)
                 } else {
-                    console.error('❌ Todas as tentativas falharam. Aguardando 30 segundos...');
-                    // Cooldown de 30 segundos após falhas
+                    console.error('❌ Todas as tentativas falharam. Tentando próxima piada...');
+                    // Após falhas, tenta próxima piada imediatamente
                     if (jokeLoopEnabled && currentView === 'home') {
-                        setTimeout(() => {
-                            if (jokeLoopEnabled && currentView === 'home') {
-                                isPlayingJoke = false;
-                                playBennyJoke();
-                            } else {
-                                isPlayingJoke = false;
-                            }
-                        }, 30000);
+                        isPlayingJoke = false;
+                        playBennyJoke(); // Próxima piada imediata (0 segundos)
                     } else {
                         isPlayingJoke = false;
                     }
