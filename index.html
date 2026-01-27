@@ -1135,7 +1135,9 @@
             console.log('📊 Estado:', {
                 isAudioUnlocked,
                 hasAudioContext: !!audioContext,
-                audioContextState: audioContext?.state
+                audioContextState: audioContext?.state,
+                shouldAutoStart: window.shouldAutoStart,
+                jokeLoopEnabled
             });
 
             if (!isAudioUnlocked && audioContext && audioContext.state === 'suspended') {
@@ -1143,9 +1145,30 @@
                 audioContext.resume().then(() => {
                     isAudioUnlocked = true;
                     console.log('✅ AudioContext resumed! isAudioUnlocked =', isAudioUnlocked);
+
+                    // Se auto-start está ativado e piadas ainda não iniciaram, iniciar agora!
+                    if (window.shouldAutoStart && !jokeLoopEnabled) {
+                        console.log('🎬 Áudio desbloqueado! Iniciando Benny automaticamente...');
+                        setTimeout(() => {
+                            initializeBenny();
+                        }, 1000);
+                    } else {
+                        console.log('ℹ️ Não iniciando Benny:', {
+                            shouldAutoStart: window.shouldAutoStart,
+                            jokeLoopEnabled
+                        });
+                    }
                 });
             } else {
                 console.log('ℹ️ AudioContext já está ativo ou não existe');
+
+                // Se áudio já estava desbloqueado, verificar se precisa iniciar piadas
+                if (isAudioUnlocked && window.shouldAutoStart && !jokeLoopEnabled) {
+                    console.log('🎬 Áudio já desbloqueado! Iniciando Benny...');
+                    setTimeout(() => {
+                        initializeBenny();
+                    }, 1000);
+                }
             }
         }
 
