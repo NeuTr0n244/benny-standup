@@ -928,16 +928,21 @@
             setTimeout(() => laughVisualizer.classList.remove('active'), 1500);
         }
 
-        // ===== SISTEMA DE PIADAS COM IA =====
+        // ===== SISTEMA DE PIADAS COM IA + BUFFER =====
         let isPlayingJoke = false;
         let jokeLoopEnabled = false;
+        let jokeBuffer = []; // Buffer para armazenar piadas pré-carregadas
+        let isPreloading = false;
+        const MAX_BUFFER_SIZE = 2; // Manter sempre 2 piadas no buffer
 
-        async function playBennyJoke(retries = 3) {
-            if (isPlayingJoke) return;
-            isPlayingJoke = true;
+        // Função para pré-carregar uma piada e adicionar ao buffer
+        async function preloadJoke() {
+            if (isPreloading || jokeBuffer.length >= MAX_BUFFER_SIZE) return;
+            isPreloading = true;
 
             try {
-                // 1. Chamar API backend
+                console.log(`📦 Pré-carregando piada... (Buffer: ${jokeBuffer.length}/${MAX_BUFFER_SIZE})`);
+
                 const response = await fetch('/api/generate-joke', {
                     method: 'POST',
                     headers: {
@@ -955,35 +960,70 @@
                     throw new Error(data.message || 'Failed to generate joke');
                 }
 
-                console.log('🎤 BENNY DISSE:', data.joke);
+                // Adicionar ao buffer
+                jokeBuffer.push({
+                    text: data.joke,
+                    audioBase64: data.audio,
+                    audioFormat: data.audioFormat || 'audio/mpeg'
+                });
 
-                // 2. Converter base64 para audio blob
-                const audioData = atob(data.audio);
+                console.log(`✅ Piada adicionada ao buffer! (${jokeBuffer.length}/${MAX_BUFFER_SIZE})`);
+
+            } catch (error) {
+                console.error('❌ Erro ao pré-carregar piada:', error);
+            } finally {
+                isPreloading = false;
+            }
+        }
+
+        // Função para tocar próxima piada do buffer
+        async function playNextJoke() {
+            if (isPlayingJoke) return;
+
+            // Se buffer vazio, gerar piada na hora (fallback)
+            if (jokeBuffer.length === 0) {
+                console.log('⚠️ Buffer vazio! Gerando piada na hora...');
+                await preloadJoke();
+                if (jokeBuffer.length === 0) {
+                    console.error('❌ Falha ao gerar piada');
+                    if (jokeLoopEnabled && currentView === 'home') {
+                        setTimeout(() => playNextJoke(), 1000); // Retry em 1s
+                    }
+                    return;
+                }
+            }
+
+            isPlayingJoke = true;
+
+            // Pegar primeira piada do buffer
+            const joke = jokeBuffer.shift();
+            console.log(`🎤 BENNY DISSE: ${joke.text}`);
+            console.log(`📊 Buffer restante: ${jokeBuffer.length}/${MAX_BUFFER_SIZE}`);
+
+            // Disparar pré-carregamento de nova piada em background
+            preloadJoke();
+
+            try {
+                // Converter base64 para audio blob
+                const audioData = atob(joke.audioBase64);
                 const audioArray = new Uint8Array(audioData.length);
                 for (let i = 0; i < audioData.length; i++) {
                     audioArray[i] = audioData.charCodeAt(i);
                 }
-                const audioBlob = new Blob([audioArray], { type: data.audioFormat || 'audio/mpeg' });
+                const audioBlob = new Blob([audioArray], { type: joke.audioFormat });
                 const audioUrl = URL.createObjectURL(audioBlob);
 
-                // 3. Criar e tocar áudio
+                // Criar e tocar áudio
                 const audio = new Audio(audioUrl);
-
-                // Tocar áudio
-                audio.addEventListener('play', () => {
-                    // Áudio iniciado
-                });
 
                 // Quando terminar
                 audio.addEventListener('ended', () => {
                     URL.revokeObjectURL(audioUrl);
+                    isPlayingJoke = false;
 
-                    // Próxima piada IMEDIATAMENTE (0 segundos de espera)
+                    // Próxima piada IMEDIATAMENTE
                     if (jokeLoopEnabled && currentView === 'home') {
-                        isPlayingJoke = false;
-                        playBennyJoke(); // Inicia imediatamente
-                    } else {
-                        isPlayingJoke = false;
+                        playNextJoke(); // Transição instantânea!
                     }
                 });
 
@@ -992,6 +1032,11 @@
                     console.error('❌ Erro ao tocar áudio:', e);
                     URL.revokeObjectURL(audioUrl);
                     isPlayingJoke = false;
+
+                    // Tentar próxima piada
+                    if (jokeLoopEnabled && currentView === 'home') {
+                        playNextJoke();
+                    }
                 });
 
                 // Desbloquear áudio e tocar
@@ -999,40 +1044,38 @@
                 await audio.play();
 
             } catch (error) {
-                console.error('❌ Erro ao gerar piada:', error);
+                console.error('❌ Erro ao tocar piada:', error);
+                isPlayingJoke = false;
 
-                // Sistema de retry - IMEDIATO
-                if (retries > 0) {
-                    console.log(`🔄 Tentando novamente... (${retries} tentativas restantes)`);
-                    isPlayingJoke = false;
-                    playBennyJoke(retries - 1); // Retry imediato (0 segundos)
-                } else {
-                    console.error('❌ Todas as tentativas falharam. Tentando próxima piada...');
-                    // Após falhas, tenta próxima piada imediatamente
-                    if (jokeLoopEnabled && currentView === 'home') {
-                        isPlayingJoke = false;
-                        playBennyJoke(); // Próxima piada imediata (0 segundos)
-                    } else {
-                        isPlayingJoke = false;
-                    }
+                // Tentar próxima piada
+                if (jokeLoopEnabled && currentView === 'home') {
+                    playNextJoke();
                 }
             }
         }
 
         // ===== FUNÇÕES DE CONTROLE PÚBLICO (via console) =====
-        window.startBenny = function() {
+        window.startBenny = async function() {
             if (jokeLoopEnabled) {
                 console.log('⚠️ Benny já está ativo!');
                 return;
             }
             jokeLoopEnabled = true;
-            console.log('🎭 Sistema de piadas ativado! Benny começará a contar piadas.');
-            playBennyJoke();
+            console.log('🎭 Sistema de piadas ativado!');
+            console.log('📦 Pré-carregando buffer inicial (2 piadas)...');
+
+            // Pré-carregar 2 piadas antes de começar
+            await preloadJoke();
+            await preloadJoke();
+
+            console.log('✅ Buffer pronto! Iniciando Benny...');
+            playNextJoke();
         };
 
         window.stopBenny = function() {
             jokeLoopEnabled = false;
             console.log('⏸️ Sistema de piadas pausado. Benny foi silenciado.');
+            console.log(`📊 Buffer atual: ${jokeBuffer.length} piadas`);
         };
 
         // ===== PIADAS (DESATIVADO) =====
