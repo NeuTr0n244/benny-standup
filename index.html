@@ -1265,36 +1265,21 @@
             setTimeout(() => laughVisualizer.classList.remove('active'), 1500);
         }
 
-        // ===== SISTEMA DE PIADAS SINCRONIZADO VIA FIREBASE =====
-        let isPlayingJoke = false;
+        // ===== SISTEMA DE PIADAS COM BUFFER (0 DELAY) =====
+        window.jokeBuffer = [];  // Buffer de piadas pré-carregadas
+        window.isGenerating = false;  // Flag para evitar gerar múltiplas vezes
         let jokeLoopEnabled = false;
-        // REMOVIDO: window.currentJokeRef = null - agora inicializado em script inline antes do módulo
-        let lastJokeId = null; // ID da última piada tocada (evitar retocar)
-        let isGeneratingJoke = false; // Flag para evitar gerar múltiplas vezes
-        const JOKE_DURATION = 40000; // Duração estimada de uma piada (40 segundos)
+        let isPlayingJoke = false;
 
-        // Função para gerar e publicar piada no Firebase (sincronizada para todos)
-        async function generateAndBroadcastJoke() {
-            if (isGeneratingJoke || !window.currentJokeRef) return;
-
-            // Verificar se já existe piada recente (última 35 segundos)
-            try {
-                const snapshot = await window.currentJokeRef.once('value');
-                const existingJoke = snapshot.val();
-
-                if (existingJoke && existingJoke.createdAt) {
-                    const timeSinceLastJoke = Date.now() - existingJoke.createdAt;
-                    if (timeSinceLastJoke < 60000) {
-                        console.log(`⏳ Piada recente já existe (${Math.round(timeSinceLastJoke/1000)}s atrás). Aguardando...`);
-                        return;
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Erro ao verificar piada existente:', error);
+        // Gerar piada e adicionar ao buffer (não bloqueia)
+        async function generateJokeToBuffer() {
+            if (window.isGenerating) {
+                console.log('⚠️ Já está gerando uma piada, aguardando...');
+                return;
             }
 
-            isGeneratingJoke = true;
-            console.log('🎬 Gerando nova piada sincronizada...');
+            window.isGenerating = true;
+            console.log('🎬 Gerando piada para o buffer...');
 
             try {
                 const response = await fetch('/api/generate-joke', {
@@ -1310,302 +1295,172 @@
 
                 const data = await response.json();
 
-                if (!data.success) {
-                    throw new Error(data.message || 'Failed to generate joke');
+                if (!data.success || !data.audio || !data.joke) {
+                    throw new Error(data.message || 'Invalid joke data');
                 }
 
-                const jokeId = Date.now();
+                // Adicionar ao buffer
                 const jokeData = {
-                    id: jokeId,
+                    id: Date.now(),
                     text: data.joke,
                     audio: data.audio,
                     audioFormat: data.audioFormat || 'audio/mpeg',
-                    createdAt: jokeId,
-                    playAt: jokeId
+                    createdAt: Date.now()
                 };
 
-                // Publicar no Firebase para TODOS os clientes
-                await window.currentJokeRef.set(jokeData);
-                console.log(`📡 Piada publicada no Firebase! ID: ${jokeId}`);
+                window.jokeBuffer.push(jokeData);
+                console.log(`✅ Piada adicionada ao buffer! Total: ${window.jokeBuffer.length}`);
 
             } catch (error) {
-                console.error('❌ Erro ao gerar/publicar piada:', error);
+                console.error('❌ Erro ao gerar piada:', error);
             } finally {
-                isGeneratingJoke = false;
+                window.isGenerating = false;
             }
         }
 
-        // Função para tocar piada sincronizada (chamada quando Firebase atualiza)
-        async function playSyncedJoke(jokeData) {
-            console.log('🎵 playSyncedJoke() chamada');
-            console.log('📋 Validando dados da piada...');
+        // Pré-carregar buffer inicial (2 piadas)
+        async function preloadJokes() {
+            console.log('📦 Pré-carregando buffer de piadas...');
 
-            if (!jokeData || !jokeData.audio || !jokeData.id) {
-                console.error('❌ Dados de piada inválidos:', {
-                    hasJokeData: !!jokeData,
-                    hasAudio: !!jokeData?.audio,
-                    hasId: !!jokeData?.id
-                });
+            const promises = [];
+            for (let i = 0; i < 2; i++) {
+                promises.push(generateJokeToBuffer());
+            }
+
+            await Promise.all(promises);
+
+            console.log(`✅ Buffer pré-carregado! ${window.jokeBuffer.length} piadas prontas`);
+        }
+
+        // Tocar próxima piada do buffer (INSTANTÂNEO - 0 delay)
+        async function playNextJoke() {
+            console.log('🎵 playNextJoke() chamada');
+
+            // Se buffer vazio, gerar uma piada
+            if (window.jokeBuffer.length === 0) {
+                console.log('⚠️ Buffer vazio! Gerando piada...');
+                await generateJokeToBuffer();
+            }
+
+            // Se ainda está vazio (erro na geração), abortar
+            if (window.jokeBuffer.length === 0) {
+                console.error('❌ Não foi possível gerar piada. Tentando novamente em 5s...');
+                setTimeout(playNextJoke, 5000);
                 return;
             }
-            console.log('✅ Dados válidos!');
 
-            // Verificar se piada não está expirada (>60 segundos)
-            if (jokeData.createdAt) {
-                const jokeAge = Date.now() - jokeData.createdAt;
-                if (jokeAge > 60000) {
-                    console.log(`⏰ Piada expirada (${Math.round(jokeAge/1000)}s). Gerando nova...`);
-                    if (jokeLoopEnabled) {
-                        await generateAndBroadcastJoke();
-                    }
-                    return;
-                }
-            }
-
-            // Evitar retocar a mesma piada
-            if (jokeData.id === lastJokeId) {
-                console.log(`⏭️ Piada ${jokeData.id} já foi tocada, ignorando...`);
-                return;
-            }
-
-            // Evitar tocar múltiplas piadas simultaneamente
-            if (isPlayingJoke) {
-                console.log('⚠️ Já há uma piada tocando, ignorando nova piada...');
-                return;
-            }
+            // Pegar primeira piada do buffer (INSTANTÂNEO!)
+            const jokeData = window.jokeBuffer.shift();
+            console.log(`🎤 BENNY: "${jokeData.text}"`);
+            console.log(`📊 Buffer restante: ${window.jokeBuffer.length} piadas`);
 
             isPlayingJoke = true;
-            lastJokeId = jokeData.id;
-
-            console.log(`🎤 BENNY DISSE (SYNC): ${jokeData.text}`);
-            console.log(`📡 ID da piada: ${jokeData.id}`);
 
             try {
-                console.log('🔄 Convertendo base64 para áudio...');
-                console.log('📏 Tamanho do base64:', jokeData.audio.length);
-
-                // Converter base64 para audio blob
+                // Converter base64 para áudio
                 const audioData = atob(jokeData.audio);
-                console.log('✅ Base64 decodificado, tamanho:', audioData.length);
-
                 const audioArray = new Uint8Array(audioData.length);
                 for (let i = 0; i < audioData.length; i++) {
                     audioArray[i] = audioData.charCodeAt(i);
                 }
-                console.log('✅ Array criado');
 
                 const audioBlob = new Blob([audioArray], { type: jokeData.audioFormat || 'audio/mpeg' });
-                console.log('✅ Blob criado, tamanho:', audioBlob.size, 'tipo:', audioBlob.type);
-
                 const audioUrl = URL.createObjectURL(audioBlob);
-                console.log('✅ URL criada:', audioUrl.substring(0, 50) + '...');
 
-                // Criar e tocar áudio
-                console.log('🎧 Criando elemento Audio...');
+                // Criar elemento de áudio
                 const audio = new Audio(audioUrl);
-                audio.volume = currentAudioVolume; // Aplica volume baseado na aba
-                console.log('🔊 Volume configurado:', audio.volume);
-                currentJokeAudio = audio; // Guarda referência para ajuste em tempo real
+                audio.volume = currentAudioVolume;
+                currentJokeAudio = audio;
 
-                // Quando terminar
+                // Quando a piada terminar
                 audio.addEventListener('ended', () => {
+                    console.log('✅ Piada finalizada!');
                     URL.revokeObjectURL(audioUrl);
                     currentJokeAudio = null;
                     isPlayingJoke = false;
 
-                    console.log('✅ Piada finalizada. Gerando próxima em 2s...');
+                    // Broadcast no Firebase para sincronizar outros clientes
+                    if (window.currentJokeRef) {
+                        window.currentJokeRef.set({
+                            id: jokeData.id,
+                            text: jokeData.text,
+                            audio: jokeData.audio,
+                            audioFormat: jokeData.audioFormat,
+                            startedAt: Date.now()
+                        }).catch(err => console.error('Erro ao sincronizar Firebase:', err));
+                    }
 
-                    // Após piada terminar, tentar gerar próxima (se estiver ativo)
+                    // PRÓXIMA PIADA IMEDIATAMENTE (0 delay!)
                     if (jokeLoopEnabled) {
-                        setTimeout(() => {
-                            generateAndBroadcastJoke();
-                        }, 2000); // 2 segundos de pausa entre piadas
+                        playNextJoke();
                     }
                 });
 
-                // Handler de erro no áudio
+                // Erro no áudio
                 audio.addEventListener('error', (e) => {
                     console.error('❌ Erro ao tocar áudio:', e);
                     URL.revokeObjectURL(audioUrl);
                     currentJokeAudio = null;
                     isPlayingJoke = false;
-                });
 
-                // Desbloquear áudio e garantir que AudioContext está running
-                console.log('🔓 Verificando áudio...');
-                console.log('📊 Estado do AudioContext:', {
-                    exists: !!audioContext,
-                    state: audioContext?.state,
-                    'window.isAudioUnlocked': window.isAudioUnlocked
-                });
-
-                // SEMPRE tentar resumir AudioContext antes de tocar
-                if (audioContext && audioContext.state === 'suspended') {
-                    console.log('⚠️ AudioContext suspended! Resumindo antes de tocar...');
-                    try {
-                        await audioContext.resume();
-                        window.isAudioUnlocked = true;
-                        console.log('✅ AudioContext resumed!');
-                    } catch (resumeErr) {
-                        console.error('❌ Erro ao resumir AudioContext:', resumeErr);
+                    // Tentar próxima piada
+                    if (jokeLoopEnabled) {
+                        setTimeout(playNextJoke, 2000);
                     }
+                });
+
+                // Garantir que AudioContext está ativo
+                if (audioContext && audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                    window.isAudioUnlocked = true;
                 }
 
-                console.log('▶️ Tentando reproduzir áudio...');
-                console.log('📊 Estado do elemento Audio:', {
-                    readyState: audio.readyState,
-                    paused: audio.paused,
-                    volume: audio.volume,
-                    src: audio.src.substring(0, 50) + '...'
-                });
+                // Tocar áudio
+                await audio.play();
+                console.log('🎉 ÁUDIO TOCANDO!');
 
-                // Tentar tocar com retry se falhar
-                const playAudio = async (retries = 3) => {
-                    try {
-                        await audio.play();
-                        console.log('🎉 ÁUDIO TOCANDO COM SUCESSO!');
-                        return true;
-                    } catch (err) {
-                        console.error(`❌ ERRO AO TOCAR ÁUDIO (tentativa ${4 - retries}/3):`, err);
-                        console.error('📝 Detalhes do erro:', {
-                            name: err.name,
-                            message: err.message
-                        });
-
-                        // Se ainda tem retries e é erro de interação, tentar resumir e tentar de novo
-                        if (retries > 0 && err.name === 'NotAllowedError') {
-                            console.log('🔄 Tentando resumir AudioContext e tentar novamente...');
-                            if (audioContext) {
-                                try {
-                                    await audioContext.resume();
-                                    window.isAudioUnlocked = true;
-                                    await new Promise(resolve => setTimeout(resolve, 100));
-                                    return await playAudio(retries - 1);
-                                } catch (resumeErr) {
-                                    console.error('❌ Erro ao resumir AudioContext:', resumeErr);
-                                }
-                            }
-                        }
-
-                        // Se falhou todas as tentativas
-                        if (retries === 0) {
-                            console.error('❌ Falhou após 3 tentativas. Detalhes:', {
-                                name: err.name,
-                                message: err.message,
-                                code: err.code
-                            });
-                        }
-
-                        throw err; // Re-throw para o catch externo
-                    }
-                };
-
-                // Chamar função de play com retries
-                await playAudio();
+                // Repor o buffer em background (não bloqueia)
+                if (window.jokeBuffer.length < 2) {
+                    console.log('🔄 Reabastecendo buffer...');
+                    generateJokeToBuffer(); // Async, não bloqueia
+                }
 
             } catch (error) {
-                console.error('❌ Erro FINAL ao tocar piada:', error);
-                URL.revokeObjectURL(audioUrl);
-                currentJokeAudio = null;
+                console.error('❌ Erro ao tocar piada:', error);
                 isPlayingJoke = false;
-            }
-        }
 
-        // Listener Firebase - escuta mudanças em /currentJoke
-        function setupJokeSyncListener() {
-            if (!window.currentJokeRef) {
-                console.error('❌ Referência Firebase não inicializada!');
-                return;
-            }
-
-            console.log('👂 Escutando piadas sincronizadas via Firebase...');
-
-            window.currentJokeRef.on('value', (snapshot) => {
-                const jokeData = snapshot.val();
-
-                console.log('🔥 Firebase listener disparado!');
-                console.log('📦 Dados recebidos:', {
-                    hasData: !!jokeData,
-                    hasId: !!jokeData?.id,
-                    hasAudio: !!jokeData?.audio,
-                    hasText: !!jokeData?.text,
-                    audioLength: jokeData?.audio?.length,
-                    textPreview: jokeData?.text?.substring(0, 50)
-                });
-
-                if (jokeData && jokeData.id) {
-                    console.log(`📩 Nova piada recebida do Firebase! ID: ${jokeData.id}`);
-                    playSyncedJoke(jokeData);
-                } else {
-                    console.log('⚠️ Dados incompletos do Firebase, ignorando...');
+                // Tentar próxima em 2s
+                if (jokeLoopEnabled) {
+                    setTimeout(playNextJoke, 2000);
                 }
-            });
+            }
         }
 
-        // ===== FUNÇÕES DE CONTROLE (via console para desenvolvimento) =====
+        // ===== INICIALIZAR BENNY (show ao vivo) =====
         async function initializeBenny() {
             console.log('🎬 initializeBenny() CHAMADA!');
-            console.log('📊 Estado COMPLETO das variáveis:', {
-                jokeLoopEnabled,
-                'window.firebaseReady': window.firebaseReady,
-                'window.currentJokeRef': window.currentJokeRef,
-                'typeof window.firebaseReady': typeof window.firebaseReady,
-                'typeof window.currentJokeRef': typeof window.currentJokeRef
-            });
 
             if (jokeLoopEnabled) {
                 console.log('⚠️ Benny já está ativo!');
                 return;
             }
 
-            // Verificar se Firebase está pronto
-            console.log('🔍 Verificando Firebase... firebaseReady:', window.firebaseReady, ', currentJokeRef:', !!window.currentJokeRef);
-            if (!window.firebaseReady || !window.currentJokeRef) {
-                console.error('❌ Firebase NÃO está pronto!');
-                console.error('📋 Detalhes:', {
-                    'window.firebaseReady': window.firebaseReady,
-                    'window.currentJokeRef': window.currentJokeRef,
-                    'Tipo firebaseReady': typeof window.firebaseReady,
-                    'Tipo currentJokeRef': typeof window.currentJokeRef
-                });
-                return;
-            }
-
-            console.log('✅ Firebase ESTÁ pronto! Continuando...');
-
+            console.log('✅ Iniciando show ao vivo...');
             jokeLoopEnabled = true;
-            console.log('🎭 Sistema de piadas SINCRONIZADO ativado!');
-            console.log('📡 Todos os clientes ouvirão as MESMAS piadas ao MESMO tempo');
 
-            // Setup listener para piadas sincronizadas
-            setupJokeSyncListener();
+            // Pré-carregar buffer de piadas
+            await preloadJokes();
 
-            // Verificar se já existe piada atual
-            const snapshot = await window.currentJokeRef.once('value');
-            const existingJoke = snapshot.val();
-
-            if (existingJoke && existingJoke.id) {
-                // Verificar se piada não está expirada
-                const jokeAge = existingJoke.createdAt ? (Date.now() - existingJoke.createdAt) : 999999;
-                if (jokeAge < 60000) {
-                    console.log('📻 Piada já está rolando! Sincronizando...');
-                    playSyncedJoke(existingJoke);
-                } else {
-                    console.log(`⏰ Piada expirada (${Math.round(jokeAge/1000)}s). Gerando nova...`);
-                    await generateAndBroadcastJoke();
-                }
-            } else {
-                console.log('🎬 Nenhuma piada ativa. Gerando primeira piada...');
-                await generateAndBroadcastJoke();
-            }
+            // Começar a tocar (INSTANTÂNEO!)
+            console.log('🎭 Iniciando primeira piada...');
+            playNextJoke();
         }
 
         // Expor controles no console para desenvolvimento
         window.startBenny = initializeBenny;
         window.stopBenny = function() {
             jokeLoopEnabled = false;
-            console.log('⏸️ Sistema de piadas pausado.');
-            console.log('📡 Listener Firebase continua ativo (você ainda ouvirá piadas de outros clientes)');
+            console.log('⏸️ Show pausado.');
         };
 
         // ===== PIADAS (DESATIVADO) =====
