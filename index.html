@@ -719,7 +719,7 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
         // ===== CONFIGURAÇÃO =====
-        const AUTO_START = false; // DESATIVADO - Usar apenas no lançamento oficial
+        const AUTO_START = true; // ATIVADO - Piadas iniciam automaticamente e sincronizadas
 
         const CONFIG = {
             // GLB hosted on Cloudflare R2 - No CORS issues, fast CDN delivery
@@ -1175,7 +1175,7 @@
 
                 if (existingJoke && existingJoke.createdAt) {
                     const timeSinceLastJoke = Date.now() - existingJoke.createdAt;
-                    if (timeSinceLastJoke < 35000) {
+                    if (timeSinceLastJoke < 60000) {
                         console.log(`⏳ Piada recente já existe (${Math.round(timeSinceLastJoke/1000)}s atrás). Aguardando...`);
                         return;
                     }
@@ -1231,6 +1231,18 @@
             if (!jokeData || !jokeData.audio || !jokeData.id) {
                 console.log('⚠️ Dados de piada inválidos');
                 return;
+            }
+
+            // Verificar se piada não está expirada (>60 segundos)
+            if (jokeData.createdAt) {
+                const jokeAge = Date.now() - jokeData.createdAt;
+                if (jokeAge > 60000) {
+                    console.log(`⏰ Piada expirada (${Math.round(jokeAge/1000)}s). Gerando nova...`);
+                    if (jokeLoopEnabled) {
+                        await generateAndBroadcastJoke();
+                    }
+                    return;
+                }
             }
 
             // Evitar retocar a mesma piada
@@ -1344,10 +1356,17 @@
             const existingJoke = snapshot.val();
 
             if (existingJoke && existingJoke.id) {
-                console.log('📻 Piada já está rolando! Sincronizando...');
-                playSyncedJoke(existingJoke);
+                // Verificar se piada não está expirada
+                const jokeAge = existingJoke.createdAt ? (Date.now() - existingJoke.createdAt) : 999999;
+                if (jokeAge < 60000) {
+                    console.log('📻 Piada já está rolando! Sincronizando...');
+                    playSyncedJoke(existingJoke);
+                } else {
+                    console.log(`⏰ Piada expirada (${Math.round(jokeAge/1000)}s). Gerando nova...`);
+                    await generateAndBroadcastJoke();
+                }
             } else {
-                console.log('🎬 Gerando primeira piada...');
+                console.log('🎬 Nenhuma piada ativa. Gerando primeira piada...');
                 await generateAndBroadcastJoke();
             }
         }
