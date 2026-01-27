@@ -130,28 +130,6 @@
 
         #ui-layer > * { pointer-events: auto; }
 
-        #volume-btn {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 1.5rem;
-        }
-
-        #volume-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: #00f5ff;
-        }
 
         /* REMOVIDO - Sistema de piadas */
         #joke-display {
@@ -680,12 +658,6 @@
     </div>
 
     <div id="ui-layer">
-        <button id="volume-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-            </svg>
-        </button>
-
         <div id="joke-display">
             <div id="joke-text"></div>
         </div>
@@ -753,8 +725,8 @@
             // GLB hosted on Cloudflare R2 - No CORS issues, fast CDN delivery
             modelPath: 'https://pub-8d7b1a002dc7461881f41950b1c60105.r2.dev/mr_penguin.glb',
             contractAddress: '7UxJfQKSKvnXQPvMQDH9YPMEJg8z3ZrD4KwXmXXXpump',
-            twitterUrl: 'https://x.com/BennyComedy',
-            communityUrl: 'https://x.com/i/communities/2016034127355507198',
+            twitterUrl: 'https://x.com/BennyStandUp',
+            communityUrl: 'https://x.com/i/communities/2016038721091445200',
             buyUrl: 'https://pump.fun/',
 
             rotations: {
@@ -778,7 +750,6 @@
         // ===== VARIÁVEIS GLOBAIS =====
         let scene, camera, renderer, mixer, model;
         let currentView = 'home';
-        let isMuted = false;
         let currentAudioVolume = 1.0; // Volume baseado na aba (1.0 = HOME, 0.25 = ABOUT/COMMUNITY)
         let currentJokeAudio = null; // Referência ao áudio atual para ajustar volume em tempo real
         let audioContext, laughBuffer;
@@ -799,7 +770,6 @@
         const loadingOverlay = document.getElementById('loading-overlay');
         const loadingBar = document.getElementById('loading-bar');
         const loadingPercent = document.getElementById('loading-percent');
-        const volumeBtn = document.getElementById('volume-btn');
         const jokeDisplay = document.getElementById('joke-display');
         const jokeText = document.getElementById('joke-text');
         const navButtons = document.querySelectorAll('.nav-btn');
@@ -1173,7 +1143,7 @@
         }
 
         function playLaugh() {
-            if (!audioContext || !laughBuffer || isMuted) return;
+            if (!audioContext || !laughBuffer) return;
             unlockAudio();
             const source = audioContext.createBufferSource();
             source.buffer = laughBuffer;
@@ -1522,11 +1492,6 @@
         function setupEventListeners() {
             document.addEventListener('click', unlockAudio, { once: true });
 
-            volumeBtn.addEventListener('click', () => {
-                isMuted = !isMuted;
-                volumeBtn.textContent = isMuted ? '🔇' : '🔊';
-            });
-
             navButtons.forEach(btn => {
                 btn.addEventListener('click', () => changeView(btn.dataset.view));
             });
@@ -1543,7 +1508,6 @@
                     changeView('home');
                     e.preventDefault();
                 }
-                else if ((e.key === 'm' || e.key === 'M') && !isTyping) volumeBtn.click();
             });
         }
 
