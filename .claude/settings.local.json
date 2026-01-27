@@ -31,7 +31,10 @@
       "Bash(taskkill //F //PID 8437)",
       "Bash(xargs kill:*)",
       "Bash(powershell -Command \"Start-Process ''https://github.com/NeuTr0n244/benny-standup/releases/new''\")",
-      "Bash(powershell -Command \"Start-Process ''file:///C:/Users/NEUTRON/Documents/standup/upload-glb-guide.html''\")"
+      "Bash(powershell -Command \"Start-Process ''file:///C:/Users/NEUTRON/Documents/standup/upload-glb-guide.html''\")",
+      "Bash(powershell -Command \"Start-Process ''file:///C:/Users/NEUTRON/Documents/standup/cloudflare-r2-wizard.html''\")",
+      "Bash(powershell -Command \"Start-Process ''https://dash.cloudflare.com/sign-up''\")",
+      "Bash(winget upgrade:*)"
     ]
   }
 }

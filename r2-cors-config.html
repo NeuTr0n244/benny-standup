@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Cloudflare R2 - Configurar CORS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 45, 149, 0.1);
+            border-radius: 20px;
+            border: 2px solid #ff2d95;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #ff2d95;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #ffea00;
+        }
+
+        .error-box {
+            background: rgba(255, 45, 149, 0.2);
+            border: 2px solid #ff2d95;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .error-box h2 {
+            color: #ff2d95;
+            margin-bottom: 15px;
+        }
+
+        .step {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 5px solid #ffea00;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            transition: all 0.3s ease;
+        }
+
+        .step:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #ff2d95, #ffea00);
+            color: #000;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .step-content {
+            margin-left: 70px;
+        }
+
+        .code-box {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            color: #00ff88;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-box pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .button {
+            background: linear-gradient(135deg, #ff2d95, #ffea00);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 45, 149, 0.5);
+        }
+
+        .info-box {
+            background: rgba(0, 150, 255, 0.1);
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .warning-box {
+            background: rgba(255, 165, 0, 0.1);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .success-box {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .screenshot-placeholder {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            color: #aaa;
+        }
+
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+
+        li {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+
+        .highlight {
+            background: rgba(255, 234, 0, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #ffea00;
+            font-weight: bold;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            cursor: pointer;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .checkbox-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        #final-message {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 200, 255, 0.2));
+            border: 3px solid #00ff88;
+            border-radius: 20px;
+            margin-top: 40px;
+        }
+
+        #final-message h2 {
+            color: #00ff88;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .video-demo {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #ff2d95;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .video-demo h3 {
+            color: #ff2d95;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 Configurar CORS no Cloudflare R2</h1>
+            <p class="subtitle">Resolver erro de CORS definitivamente!</p>
+        </header>
+
+        <div class="error-box">
+            <h2>❌ Erro Atual</h2>
+            <p><strong>Access to fetch from origin has been blocked by CORS policy</strong></p>
+            <br>
+            <p>Mesmo hospedando no R2, o bucket precisa de uma <strong>política CORS</strong> configurada explicitamente.</p>
+        </div>
+
+        <!-- STEP 1 -->
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">Acessar o Bucket no R2</div>
+            </div>
+            <div class="step-content">
+                <p>Acesse o dashboard do Cloudflare R2 e entre no bucket <span class="highlight">benny-assets</span></p>
+
+                <ol>
+                    <li>Vá para: <a href="https://dash.cloudflare.com" target="_blank" style="color: #00d4ff;">https://dash.cloudflare.com</a></li>
+                    <li>Menu lateral → <strong>R2</strong></li>
+                    <li>Clique no bucket <strong>benny-assets</strong></li>
+                </ol>
+
+                <a href="https://dash.cloudflare.com/?to=/:account/r2" target="_blank" class="button">
+                    ☁️ Abrir Cloudflare R2
+                </a>
+
+                <div class="checkbox-item">
+                    <input type="checkbox" id="check1" onchange="updateProgress()">
+                    <label for="check1">Entrei no bucket benny-assets</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">Abrir Configurações (Settings)</div>
+            </div>
+            <div class="step-content">
+                <p>Dentro do bucket, procure pela aba ou seção <span class="highlight">Settings</span></p>
+
+                <div class="info-box">
+                    <strong>📍 Onde encontrar:</strong><br>
+                    • Pode estar no topo da página como aba "Settings"<br>
+                    • Ou no menu lateral como "Configurações"<br>
+                    • Ou em um menu "⋮" (três pontos) → Settings
+                </div>
+
+                <div class="checkbox-item">
+                    <input type="checkbox" id="check2" onchange="updateProgress()">
+                    <label for="check2">Encontrei a seção Settings</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">Localizar CORS Policy</div>
+            </div>
+            <div class="step-content">
+                <p>Dentro de Settings, procure por uma seção chamada:</p>
+
+                <ul>
+                    <li><span class="highlight">CORS Policy</span> ou</li>
+                    <li><span class="highlight">CORS Configuration</span> ou</li>
+                    <li><span class="highlight">Cross-Origin Resource Sharing (CORS)</span></li>
+                </ul>
+
+                <div class="warning-box">
+                    <strong>⚠️ Não encontrou?</strong><br>
+                    • Role a página toda (pode estar no final)<br>
+                    • Procure em "Advanced Settings" ou "Configurações Avançadas"<br>
+                    • Use Ctrl+F e busque por "CORS"
+                </div>
+
+                <div class="checkbox-item">
+                    <input type="checkbox" id="check3" onchange="updateProgress()">
+                    <label for="check3">Encontrei a seção CORS Policy</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <div class="step-title">Adicionar Política CORS</div>
+            </div>
+            <div class="step-content">
+                <p>Clique em <strong>"Edit"</strong>, <strong>"Add"</strong>, ou <strong>"Configure"</strong> na seção CORS</p>
+
+                <div class="info-box">
+                    <strong>📝 Cole EXATAMENTE este JSON:</strong>
+                </div>
+
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copyCORS()">📋 Copiar</button>
+                    <pre id="cors-json">[
+  {
+    "AllowedOrigins": ["*"],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "MaxAgeSeconds": 3600
+  }
+]</pre>
+                </div>
+
+                <div class="warning-box">
+                    <strong>⚠️ IMPORTANTE:</strong><br>
+                    • Cole o JSON COMPLETO (incluindo os colchetes [ ])<br>
+                    • NÃO modifique nada<br>
+                    • Certifique-se que não tem erros de sintaxe<br>
+                    • Se já existir alguma configuração, SUBSTITUA completamente
+                </div>
+
+                <div class="success-box">
+                    <strong>✅ O que essa política faz:</strong><br>
+                    • <code>AllowedOrigins: ["*"]</code> - Permite acesso de qualquer domínio<br>
+                    • <code>AllowedMethods: ["GET", "HEAD"]</code> - Permite leitura do arquivo<br>
+                    • <code>AllowedHeaders: ["*"]</code> - Permite todos os headers<br>
+                    • <code>MaxAgeSeconds: 3600</code> - Cache de 1 hora
+                </div>
+
+                <div class="checkbox-item">
+                    <input type="checkbox" id="check4" onchange="updateProgress()">
+                    <label for="check4">Colei a política CORS no campo</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">5</div>
+                <div class="step-title">Salvar Configuração</div>
+            </div>
+            <div class="step-content">
+                <p>Clique em <strong>"Save"</strong>, <strong>"Apply"</strong>, ou <strong>"Salvar"</strong></p>
+
+                <div class="info-box">
+                    <strong>✅ Confirmação:</strong><br>
+                    Você deve ver uma mensagem de sucesso tipo:<br>
+                    • "CORS policy updated successfully"<br>
+                    • "Configuration saved"<br>
+                    • "Changes applied"
+                </div>
+
+                <div class="warning-box">
+                    <strong>⏱️ Aguarde propagação:</strong><br>
+                    Após salvar, aguarde <strong>30-60 segundos</strong> para a configuração propagar na CDN do Cloudflare.
+                </div>
+
+                <div class="checkbox-item">
+                    <input type="checkbox" id="check5" onchange="updateProgress()">
+                    <label for="check5">Salvei a configuração (apareceu mensagem de sucesso)</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 6 -->
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">6</div>
+                <div class="step-title">Testar CORS</div>
+            </div>
+            <div class="step-content">
+                <p>Aguarde 1 minuto e teste se o CORS foi resolvido:</p>
+
+                <ol>
+                    <li>Abra o site: <a href="https://standup-iota.vercel.app" target="_blank" style="color: #00d4ff;">https://standup-iota.vercel.app</a></li>
+                    <li>Abra o Console (F12)</li>
+                    <li>Recarregue a página (Ctrl+R ou F5)</li>
+                    <li>Veja se o modelo 3D carrega</li>
+                </ol>
+
+                <div class="success-box">
+                    <strong>✅ Se funcionou:</strong><br>
+                    • O modelo 3D do Benny aparece<br>
+                    • Sem erros de CORS no console<br>
+                    • Animações funcionam
+                </div>
+
+                <div class="warning-box">
+                    <strong>❌ Se ainda dá erro:</strong><br>
+                    • Aguarde mais 1-2 minutos (propagação CDN)<br>
+                    • Limpe o cache do navegador (Ctrl+Shift+Delete)<br>
+                    • Tente em aba anônima (Ctrl+Shift+N)<br>
+                    • Me avise para verificar a configuração
+                </div>
+
+                <a href="https://standup-iota.vercel.app" target="_blank" class="button">
+                    🌐 Abrir Site para Testar
+                </a>
+
+                <div class="checkbox-item">
+                    <input type="checkbox" id="check6" onchange="updateProgress()">
+                    <label for="check6">Testei e o modelo 3D está carregando sem erros!</label>
+                </div>
+            </div>
+        </div>
+
+        <div id="final-message">
+            <h2>🎉 CORS CONFIGURADO COM SUCESSO!</h2>
+            <p style="font-size: 1.2rem; margin: 20px 0;">
+                O arquivo GLB agora pode ser carregado de qualquer origem!
+            </p>
+            <p>
+                Volte para a conversa e me informe:<br>
+                <strong>"CORS configurado"</strong> ou <strong>"Funcionando"</strong>
+            </p>
+        </div>
+
+        <div class="video-demo">
+            <h3>📺 Tutorial em Vídeo (se precisar)</h3>
+            <p>Caso tenha dúvida, você pode pesquisar no YouTube:</p>
+            <p><strong>"Cloudflare R2 CORS configuration"</strong></p>
+            <p>Ou me avise onde travou que eu te ajudo! 💪</p>
+        </div>
+    </div>
+
+    <script>
+        function copyCORS() {
+            const corsText = document.getElementById('cors-json').textContent;
+            navigator.clipboard.writeText(corsText).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copiado!';
+                btn.style.background = 'linear-gradient(135deg, #00ff88, #39ff14)';
+
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = 'linear-gradient(135deg, #00ff88, #00d4ff)';
+                }, 2000);
+            });
+        }
+
+        function updateProgress() {
+            const checks = [
+                document.getElementById('check1').checked,
+                document.getElementById('check2').checked,
+                document.getElementById('check3').checked,
+                document.getElementById('check4').checked,
+                document.getElementById('check5').checked,
+                document.getElementById('check6').checked
+            ];
+
+            const completed = checks.filter(c => c).length;
+
+            if (completed === 6) {
+                document.getElementById('final-message').style.display = 'block';
+                document.getElementById('final-message').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    </script>
+</body>
+</html>

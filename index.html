@@ -1268,7 +1268,7 @@
         // ===== SISTEMA DE PIADAS COM BUFFER (0 DELAY) =====
         window.jokeBuffer = [];  // Buffer de piadas pré-carregadas
         window.isGenerating = false;  // Flag para evitar gerar múltiplas vezes
-        let jokeLoopEnabled = false;
+        window.jokeLoopEnabled = false;  // Expor globalmente para listener Firebase
         let isPlayingJoke = false;
 
         // Gerar piada e adicionar ao buffer (não bloqueia)
@@ -1391,7 +1391,7 @@
                     }
 
                     // PRÓXIMA PIADA IMEDIATAMENTE (0 delay!)
-                    if (jokeLoopEnabled) {
+                    if (window.jokeLoopEnabled) {
                         playNextJoke();
                     }
                 });
@@ -1404,7 +1404,7 @@
                     isPlayingJoke = false;
 
                     // Tentar próxima piada
-                    if (jokeLoopEnabled) {
+                    if (window.jokeLoopEnabled) {
                         setTimeout(playNextJoke, 2000);
                     }
                 });
@@ -1430,7 +1430,7 @@
                 isPlayingJoke = false;
 
                 // Tentar próxima em 2s
-                if (jokeLoopEnabled) {
+                if (window.jokeLoopEnabled) {
                     setTimeout(playNextJoke, 2000);
                 }
             }
@@ -1440,13 +1440,13 @@
         async function initializeBenny() {
             console.log('🎬 initializeBenny() CHAMADA!');
 
-            if (jokeLoopEnabled) {
+            if (window.jokeLoopEnabled) {
                 console.log('⚠️ Benny já está ativo!');
                 return;
             }
 
             console.log('✅ Iniciando show ao vivo...');
-            jokeLoopEnabled = true;
+            window.jokeLoopEnabled = true;
 
             // Pré-carregar buffer de piadas
             await preloadJokes();
@@ -1457,9 +1457,10 @@
         }
 
         // Expor controles no console para desenvolvimento
+        window.initializeBenny = initializeBenny;
         window.startBenny = initializeBenny;
         window.stopBenny = function() {
-            jokeLoopEnabled = false;
+            window.jokeLoopEnabled = false;
             console.log('⏸️ Show pausado.');
         };
 
@@ -1593,9 +1594,9 @@
 
         // ===== EVENTOS =====
         function setupEventListeners() {
-            // BOTÃO ENTER - Inicia o show
+            // BOTÃO ENTER - Entra no site (NÃO inicia piadas ainda)
             enterButton.addEventListener('click', () => {
-                console.log('🎬 ENTER clicado! Iniciando show...');
+                console.log('🎬 ENTER clicado! Entrando no show...');
 
                 // Esconde tela de entrada
                 enterScreen.classList.add('hidden');
@@ -1603,11 +1604,8 @@
                 // Desbloqueia áudio
                 unlockAudio();
 
-                // Aguarda fade out e inicia Benny
-                setTimeout(() => {
-                    console.log('🎭 Iniciando Benny após ENTER...');
-                    initializeBenny();
-                }, 800);
+                // NÃO inicia Benny ainda - aguarda comando "LANÇAMENTO" no chat
+                console.log('⏸️ Aguardando comando "LANÇAMENTO" no chat para iniciar as piadas...');
             });
 
             // Desbloquear áudio no primeiro clique do usuário (backup)
@@ -1730,14 +1728,29 @@
                 // Inicializar referência para piadas sincronizadas (usar window para acesso global)
                 window.currentJokeRef = database.ref('currentJoke');
 
+                // Listener para comando de LANÇAMENTO
+                const launchRef = database.ref('liveShow/isLaunched');
+                launchRef.on('value', (snapshot) => {
+                    const isLaunched = snapshot.val();
+
+                    if (isLaunched === true && !window.jokeLoopEnabled) {
+                        console.log('🚀 LANÇAMENTO DETECTADO! Iniciando show...');
+
+                        // Aguardar 2s para garantir que áudio está desbloqueado
+                        setTimeout(() => {
+                            if (window.initializeBenny) {
+                                window.initializeBenny();
+                            }
+                        }, 2000);
+                    }
+                });
+
                 // Marcar Firebase como pronto (usar window para acesso global)
                 window.firebaseReady = true;
                 console.log('✅ Firebase inicializado com sucesso (Chat + Jokes Sync)');
                 console.log('🔥 window.firebaseReady =', window.firebaseReady);
                 console.log('🔥 window.currentJokeRef =', window.currentJokeRef);
-
-                // NÃO inicia automaticamente - aguarda clique em ENTER
-                console.log('✅ Firebase pronto. Aguardando clique em ENTER...');
+                console.log('⏸️ Aguardando comando LANÇAMENTO...');
             } catch (error) {
                 console.error('❌ ERRO AO INICIALIZAR FIREBASE:', error);
                 console.error('📋 Detalhes do erro:', {

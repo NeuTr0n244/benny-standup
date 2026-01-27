@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Cloudflare R2 Setup Wizard - Benny GLB</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 2px solid #ff2d95;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #ff2d95;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #ffea00;
+        }
+
+        .step {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 5px solid #ffea00;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            transition: all 0.3s ease;
+        }
+
+        .step:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        .step.completed {
+            border-left-color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #ff2d95, #ffea00);
+            color: #000;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .step-content {
+            margin-left: 70px;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #ff2d95, #ffea00);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 45, 149, 0.5);
+        }
+
+        .button-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .info-box {
+            background: rgba(0, 100, 255, 0.1);
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .warning-box {
+            background: rgba(255, 165, 0, 0.1);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .success-box {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .code-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            color: #00ff88;
+            overflow-x: auto;
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #ffea00;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            font-family: monospace;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #ff2d95;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        #progress-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        #progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff2d95, #ffea00, #00ff88);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .file-path {
+            background: rgba(255, 45, 149, 0.2);
+            padding: 8px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            font-family: monospace;
+            color: #ff2d95;
+            font-weight: bold;
+        }
+
+        ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .emoji {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        #final-url-display {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 200, 255, 0.2));
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        #final-url-display h2 {
+            color: #00ff88;
+            margin-bottom: 20px;
+        }
+
+        #final-url-display .url {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            color: #00ff88;
+            word-break: break-all;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Cloudflare R2 Setup Wizard</h1>
+            <p class="subtitle">Hospede o mr_penguin.glb GRATUITAMENTE e sem CORS!</p>
+        </header>
+
+        <div id="progress-bar">
+            <div id="progress-fill">0%</div>
+        </div>
+
+        <!-- STEP 1 -->
+        <div class="step" id="step1">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">Criar Conta Cloudflare</div>
+            </div>
+            <div class="step-content">
+                <p>Crie uma conta GRATUITA no Cloudflare (se ainda não tiver).</p>
+
+                <div class="info-box">
+                    <strong>ℹ️ É realmente grátis?</strong><br>
+                    SIM! 10GB de armazenamento + bandwidth ilimitado.<br>
+                    Nosso arquivo tem 132MB = só 1.3% do limite.
+                </div>
+
+                <a href="https://dash.cloudflare.com/sign-up" target="_blank" class="button" onclick="markStep(1)">
+                    📝 Criar Conta Cloudflare
+                </a>
+
+                <button class="button button-secondary" onclick="skipStep(1)">
+                    ✅ Já tenho conta
+                </button>
+
+                <div class="checkbox-item" style="margin-top: 20px;">
+                    <input type="checkbox" id="check1" onchange="updateProgress()">
+                    <label for="check1">Conta criada e email verificado</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step" id="step2">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">Acessar R2 Storage</div>
+            </div>
+            <div class="step-content">
+                <p>No dashboard da Cloudflare, clique em <strong>"R2"</strong> no menu lateral esquerdo.</p>
+
+                <div class="warning-box">
+                    <strong>⚠️ Vai pedir cartão?</strong><br>
+                    Pode ser. É só para anti-fraude. NÃO será cobrado dentro do limite grátis (10GB).
+                    <br><br>
+                    Use um cartão virtual (Nubank, C6, etc.) se preferir.
+                </div>
+
+                <a href="https://dash.cloudflare.com/?to=/:account/r2" target="_blank" class="button" onclick="markStep(2)">
+                    ☁️ Abrir R2 Storage
+                </a>
+
+                <div class="checkbox-item" style="margin-top: 20px;">
+                    <input type="checkbox" id="check2" onchange="updateProgress()">
+                    <label for="check2">R2 Storage aberto (e billing configurado se necessário)</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step" id="step3">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">Criar Bucket</div>
+            </div>
+            <div class="step-content">
+                <p>Clique no botão <strong>"Create bucket"</strong></p>
+
+                <div class="input-group">
+                    <label>Nome do bucket:</label>
+                    <input type="text" value="benny-assets" readonly>
+                    <small style="display: block; margin-top: 5px; color: #aaa;">
+                        (Use este nome ou escolha outro. Não tem problema.)
+                    </small>
+                </div>
+
+                <div class="info-box">
+                    <strong>Configurações:</strong><br>
+                    • <strong>Location:</strong> Automatic (deixe assim)<br>
+                    • <strong>Storage Class:</strong> Standard (deixe assim)
+                </div>
+
+                <div class="checkbox-item" style="margin-top: 20px;">
+                    <input type="checkbox" id="check3" onchange="updateProgress()">
+                    <label for="check3">Bucket "benny-assets" criado</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step" id="step4">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <div class="step-title">Upload do mr_penguin.glb</div>
+            </div>
+            <div class="step-content">
+                <p>Entre no bucket <strong>benny-assets</strong> e faça upload do arquivo.</p>
+
+                <div class="file-path">
+                    C:\Users\NEUTRON\Documents\standup\mr_penguin.glb
+                </div>
+
+                <div class="warning-box">
+                    <strong>⏳ IMPORTANTE:</strong><br>
+                    • O arquivo tem 132 MB<br>
+                    • Upload pode levar 2-5 minutos<br>
+                    • NÃO feche a página durante o upload!
+                </div>
+
+                <a href="file:///C:/Users/NEUTRON/Documents/standup" target="_blank" class="button button-secondary">
+                    📁 Abrir Pasta do Arquivo
+                </a>
+
+                <ol style="margin-top: 20px;">
+                    <li>No bucket, clique em <strong>"Upload"</strong></li>
+                    <li>Selecione o arquivo <strong>mr_penguin.glb</strong></li>
+                    <li>Aguarde a barra de progresso completar</li>
+                    <li>Arquivo deve aparecer na lista</li>
+                </ol>
+
+                <div class="checkbox-item" style="margin-top: 20px;">
+                    <input type="checkbox" id="check4" onchange="updateProgress()">
+                    <label for="check4">Upload do mr_penguin.glb concluído (132 MB)</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="step" id="step5">
+            <div class="step-header">
+                <div class="step-number">5</div>
+                <div class="step-title">Configurar Acesso Público</div>
+            </div>
+            <div class="step-content">
+                <p>Torne o bucket público para permitir acesso via URL.</p>
+
+                <div class="info-box">
+                    <strong>Como fazer:</strong><br>
+                    1. No bucket <strong>benny-assets</strong>, vá em <strong>"Settings"</strong><br>
+                    2. Na seção <strong>"Public access"</strong> ou <strong>"R2.dev subdomain"</strong><br>
+                    3. Clique em <strong>"Allow Access"</strong> ou <strong>"Enable"</strong><br>
+                    4. Uma URL será gerada automaticamente
+                </div>
+
+                <div class="success-box">
+                    <strong>✅ URL Pública</strong><br>
+                    Será algo como:<br>
+                    <code style="color: #00ff88;">https://pub-xxxxxxxxxxxxx.r2.dev</code>
+                </div>
+
+                <div class="checkbox-item" style="margin-top: 20px;">
+                    <input type="checkbox" id="check5" onchange="updateProgress()">
+                    <label for="check5">Acesso público configurado</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 6 -->
+        <div class="step" id="step6">
+            <div class="step-header">
+                <div class="step-number">6</div>
+                <div class="step-title">Copiar URL Pública</div>
+            </div>
+            <div class="step-content">
+                <p>Copie a URL pública do bucket e adicione <strong>/mr_penguin.glb</strong> no final.</p>
+
+                <div class="input-group">
+                    <label>Cole a URL completa aqui:</label>
+                    <input type="text" id="r2-url" placeholder="https://pub-xxxxxxxxxxxxx.r2.dev/mr_penguin.glb" oninput="validateURL()">
+                </div>
+
+                <button class="button" onclick="testURL()">
+                    🧪 Testar URL
+                </button>
+
+                <button class="button" onclick="copyURL()">
+                    📋 Copiar URL
+                </button>
+
+                <div id="url-test-result" style="margin-top: 15px;"></div>
+
+                <div class="checkbox-item" style="margin-top: 20px;">
+                    <input type="checkbox" id="check6" onchange="updateProgress()">
+                    <label for="check6">URL testada e funcionando</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- FINAL RESULT -->
+        <div id="final-url-display">
+            <h2>🎉 PRONTO! URL do R2 Configurada!</h2>
+            <p>Cole esta URL de volta na conversa:</p>
+            <div class="url" id="final-url-text"></div>
+            <button class="button" onclick="copyFinalURL()">
+                📋 Copiar e Voltar para o Chat
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function updateProgress() {
+            const checks = [
+                document.getElementById('check1').checked,
+                document.getElementById('check2').checked,
+                document.getElementById('check3').checked,
+                document.getElementById('check4').checked,
+                document.getElementById('check5').checked,
+                document.getElementById('check6').checked
+            ];
+
+            const completed = checks.filter(c => c).length;
+            const percent = Math.round((completed / 6) * 100);
+
+            const progressFill = document.getElementById('progress-fill');
+            progressFill.style.width = percent + '%';
+            progressFill.textContent = percent + '%';
+
+            // Mark steps as completed
+            checks.forEach((checked, index) => {
+                const step = document.getElementById('step' + (index + 1));
+                if (checked) {
+                    step.classList.add('completed');
+                }
+            });
+
+            // Show final URL if all checked
+            if (percent === 100) {
+                const url = document.getElementById('r2-url').value;
+                if (url && url.includes('r2.dev')) {
+                    document.getElementById('final-url-display').style.display = 'block';
+                    document.getElementById('final-url-text').textContent = url;
+                    localStorage.setItem('r2-url', url);
+                }
+            }
+        }
+
+        function markStep(step) {
+            document.getElementById('check' + step).checked = true;
+            updateProgress();
+        }
+
+        function skipStep(step) {
+            document.getElementById('check' + step).checked = true;
+            updateProgress();
+        }
+
+        function validateURL() {
+            const url = document.getElementById('r2-url').value;
+            const check6 = document.getElementById('check6');
+
+            if (url && url.includes('r2.dev') && url.endsWith('.glb')) {
+                check6.disabled = false;
+            } else {
+                check6.disabled = true;
+                check6.checked = false;
+            }
+
+            updateProgress();
+        }
+
+        function testURL() {
+            const url = document.getElementById('r2-url').value;
+            const resultDiv = document.getElementById('url-test-result');
+
+            if (!url) {
+                resultDiv.innerHTML = '<div class="warning-box">❌ Por favor, cole uma URL primeiro!</div>';
+                return;
+            }
+
+            if (!url.includes('r2.dev') || !url.endsWith('.glb')) {
+                resultDiv.innerHTML = '<div class="warning-box">⚠️ URL não parece estar correta. Verifique o formato:<br><code>https://pub-xxxxx.r2.dev/mr_penguin.glb</code></div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info-box">🔍 Testando URL...</div>';
+
+            fetch(url, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        const size = response.headers.get('content-length');
+                        const sizeInMB = (size / 1024 / 1024).toFixed(2);
+                        resultDiv.innerHTML = `<div class="success-box">✅ URL funciona! Arquivo acessível (${sizeInMB} MB)</div>`;
+                        document.getElementById('check6').checked = true;
+                        updateProgress();
+                    } else {
+                        resultDiv.innerHTML = `<div class="warning-box">❌ URL não acessível (Status: ${response.status}). Verifique se o acesso público está ativado.</div>`;
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = '<div class="warning-box">⚠️ Não foi possível verificar. Mas se a URL estiver correta, funcionará! (CORS pode bloquear o teste, mas não o site)</div>';
+                });
+        }
+
+        function copyURL() {
+            const url = document.getElementById('r2-url').value;
+            if (!url) {
+                alert('Cole uma URL primeiro!');
+                return;
+            }
+
+            navigator.clipboard.writeText(url).then(() => {
+                alert('✅ URL copiada! Cole de volta na conversa.');
+                localStorage.setItem('r2-url', url);
+            });
+        }
+
+        function copyFinalURL() {
+            const url = document.getElementById('final-url-text').textContent;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('✅ URL copiada! Volte para a conversa e cole a URL.');
+            });
+        }
+
+        // Load saved URL on page load
+        window.addEventListener('load', () => {
+            const savedURL = localStorage.getItem('r2-url');
+            if (savedURL) {
+                document.getElementById('r2-url').value = savedURL;
+                validateURL();
+            }
+        });
+    </script>
+</body>
+</html>
