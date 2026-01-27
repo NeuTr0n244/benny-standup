@@ -1024,9 +1024,9 @@
                     URL.revokeObjectURL(audioUrl);
                     console.log('✅ Piada finalizada');
 
-                    // Aguardar 8-12 segundos antes da próxima piada
+                    // Aguardar 3 segundos antes da próxima piada
                     if (jokeLoopEnabled && currentView === 'home') {
-                        const delay = 8000 + Math.random() * 4000; // 8-12 segundos
+                        const delay = 3000; // 3 segundos
                         console.log(`⏰ Próxima piada em ${(delay/1000).toFixed(1)}s`);
                         setTimeout(() => {
                             if (jokeLoopEnabled && currentView === 'home') {
