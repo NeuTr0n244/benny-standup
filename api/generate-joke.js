@@ -17,22 +17,32 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // 1. Gerar piada com Claude
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
+    let jokeText;
 
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 150,
-      messages: [{
-        role: 'user',
-        content: 'Generate one joke.'
-      }],
-      system: "You are Benny, a savage stand-up comedian penguin. Generate ONE short joke (max 2 sentences). Style: Dark humor, edgy, adult comedy, roasts, slightly offensive but hilarious. Topics: life, relationships, internet, crypto, anything. Be creative and unpredictable. Output ONLY the joke, nothing else."
-    });
+    // 1. Verificar se tem texto customizado
+    if (req.body && req.body.customText) {
+      // Usar texto customizado (não chama Claude)
+      jokeText = req.body.customText;
+      console.log('📝 Usando texto customizado:', jokeText);
+    } else {
+      // Gerar piada com Claude
+      const anthropic = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY,
+      });
 
-    const jokeText = message.content[0].text;
+      const message = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 150,
+        messages: [{
+          role: 'user',
+          content: 'Generate one joke.'
+        }],
+        system: "You are Benny, a savage stand-up comedian penguin. Generate ONE short joke (max 2 sentences). Style: Dark humor, edgy, adult comedy, roasts, slightly offensive but hilarious. Topics: life, relationships, internet, crypto, anything. Be creative and unpredictable. Output ONLY the joke, nothing else."
+      });
+
+      jokeText = message.content[0].text;
+      console.log('🤖 Piada gerada com Claude:', jokeText);
+    }
 
     // 2. Converter para áudio com ElevenLabs
     const fetch = (await import('node-fetch')).default;
