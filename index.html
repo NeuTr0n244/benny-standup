@@ -639,9 +639,67 @@
             border-color: rgba(255, 255, 255, 0.3);
         }
 
+        /* ===== TELA DE ENTRADA (ENTER SCREEN) ===== */
+        #enter-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0f;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            opacity: 1;
+            transition: opacity 0.8s ease;
+        }
+
+        #enter-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .live-indicator {
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+
+        .enter-button {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 12px 40px;
+            font-size: 14px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .enter-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+        }
+
     </style>
 </head>
 <body>
+    <!-- ===== TELA DE ENTRADA ===== -->
+    <div id="enter-screen">
+        <span class="live-indicator">🔴 LIVE</span>
+        <button class="enter-button">ENTER</button>
+    </div>
+
     <div id="canvas-container"></div>
 
     <div id="curtains">
@@ -725,9 +783,6 @@
         if (typeof window.currentJokeRef === 'undefined') {
             window.currentJokeRef = null;
         }
-        if (typeof window.shouldAutoStart === 'undefined') {
-            window.shouldAutoStart = false;
-        }
 
         // Variável de áudio desbloqueado - NUNCA volta para false após primeiro clique
         if (typeof window.isAudioUnlocked === 'undefined') {
@@ -740,8 +795,6 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
         // ===== CONFIGURAÇÃO =====
-        const AUTO_START = true; // ATIVADO - Piadas iniciam automaticamente e sincronizadas
-
         const CONFIG = {
             // GLB hosted on Cloudflare R2 - No CORS issues, fast CDN delivery
             modelPath: 'https://pub-8d7b1a002dc7461881f41950b1c60105.r2.dev/mr_penguin.glb',
@@ -788,6 +841,8 @@
         const ANIMATION_SPEED = 2.5; // BEM mais rápido
 
         // ===== ELEMENTOS DOM =====
+        const enterScreen = document.getElementById('enter-screen');
+        const enterButton = document.querySelector('.enter-button');
         const curtains = document.getElementById('curtains');
         const loadingOverlay = document.getElementById('loading-overlay');
         const loadingBar = document.getElementById('loading-bar');
@@ -1141,17 +1196,9 @@
                     liveChat.classList.add('visible');
                 }, 500);
 
-                // Marcar que deve iniciar automaticamente quando Firebase estiver pronto
-                if (AUTO_START) {
-                    window.shouldAutoStart = true;
-                    console.log('🎬 Auto-start ativado. Aguardando Firebase...');
-
-                    // Se Firebase já estiver pronto, iniciar imediatamente
-                    if (window.firebaseReady && window.currentJokeRef) {
-                        console.log('🎭 Firebase já pronto! Iniciando Benny...');
-                        setTimeout(() => initializeBenny(), 2000);
-                    }
-                }
+                // NÃO inicia automaticamente - aguarda clique em ENTER
+                // A tela de entrada permanece visível até o usuário clicar
+                console.log('✅ Cortinas abertas. Aguardando clique em ENTER...');
             }, 500);
         }
 
@@ -1169,7 +1216,6 @@
                 'window.isAudioUnlocked': window.isAudioUnlocked,
                 hasAudioContext: !!audioContext,
                 audioContextState: audioContext?.state,
-                shouldAutoStart: window.shouldAutoStart,
                 jokeLoopEnabled
             });
 
@@ -1180,45 +1226,12 @@
                     // Uma vez desbloqueado, NUNCA volta para false
                     window.isAudioUnlocked = true;
                     console.log('✅ AudioContext resumed! window.isAudioUnlocked =', window.isAudioUnlocked);
-
-                    // Se auto-start está ativado e piadas ainda não iniciaram, iniciar agora!
-                    if (window.shouldAutoStart && !jokeLoopEnabled) {
-                        console.log('🎬 Áudio desbloqueado! Iniciando Benny automaticamente em 1s...');
-                        setTimeout(() => {
-                            console.log('⏰ Timeout de 1s completou (após unlock)! Chamando initializeBenny()...');
-                            console.log('📊 Estado antes de chamar:', {
-                                'window.firebaseReady': window.firebaseReady,
-                                'window.currentJokeRef': window.currentJokeRef,
-                                'jokeLoopEnabled': jokeLoopEnabled
-                            });
-                            initializeBenny();
-                        }, 1000);
-                    } else {
-                        console.log('ℹ️ Não iniciando Benny após unlock:', {
-                            'window.shouldAutoStart': window.shouldAutoStart,
-                            jokeLoopEnabled
-                        });
-                    }
                 }).catch(err => {
                     console.error('❌ Erro ao resumir AudioContext:', err);
                 });
             } else if (audioContext && audioContext.state === 'running') {
                 console.log('ℹ️ AudioContext já está running');
                 window.isAudioUnlocked = true;
-
-                // Se áudio já estava desbloqueado, verificar se precisa iniciar piadas
-                if (window.shouldAutoStart && !jokeLoopEnabled) {
-                    console.log('🎬 Áudio já desbloqueado! Iniciando Benny em 1s...');
-                    setTimeout(() => {
-                        console.log('⏰ Timeout de 1s completou (áudio já desbloqueado)! Chamando initializeBenny()...');
-                        console.log('📊 Estado antes de chamar:', {
-                            'window.firebaseReady': window.firebaseReady,
-                            'window.currentJokeRef': window.currentJokeRef,
-                            'jokeLoopEnabled': jokeLoopEnabled
-                        });
-                        initializeBenny();
-                    }, 1000);
-                }
             } else {
                 console.log('ℹ️ AudioContext não existe ainda');
             }
@@ -1536,7 +1549,6 @@
                 jokeLoopEnabled,
                 'window.firebaseReady': window.firebaseReady,
                 'window.currentJokeRef': window.currentJokeRef,
-                'window.shouldAutoStart': window.shouldAutoStart,
                 'typeof window.firebaseReady': typeof window.firebaseReady,
                 'typeof window.currentJokeRef': typeof window.currentJokeRef
             });
@@ -1726,7 +1738,24 @@
 
         // ===== EVENTOS =====
         function setupEventListeners() {
-            // Desbloquear áudio no primeiro clique do usuário
+            // BOTÃO ENTER - Inicia o show
+            enterButton.addEventListener('click', () => {
+                console.log('🎬 ENTER clicado! Iniciando show...');
+
+                // Esconde tela de entrada
+                enterScreen.classList.add('hidden');
+
+                // Desbloqueia áudio
+                unlockAudio();
+
+                // Aguarda fade out e inicia Benny
+                setTimeout(() => {
+                    console.log('🎭 Iniciando Benny após ENTER...');
+                    initializeBenny();
+                }, 800);
+            });
+
+            // Desbloquear áudio no primeiro clique do usuário (backup)
             document.addEventListener('click', () => {
                 console.log('👆 Primeiro clique detectado! Desbloqueando áudio...');
                 unlockAudio();
@@ -1851,22 +1880,9 @@
                 console.log('✅ Firebase inicializado com sucesso (Chat + Jokes Sync)');
                 console.log('🔥 window.firebaseReady =', window.firebaseReady);
                 console.log('🔥 window.currentJokeRef =', window.currentJokeRef);
-                console.log('🔥 window.shouldAutoStart =', window.shouldAutoStart);
 
-                // Se auto-start foi solicitado (cortinas já abriram), iniciar Benny
-                if (window.shouldAutoStart) {
-                    console.log('🎭 Firebase pronto + Auto-start ativado! Iniciando Benny em 2s...');
-                    setTimeout(() => {
-                        console.log('⏰ Timeout de 2s completou! Chamando window.initializeBenny()...');
-                        console.log('📊 Estado antes de chamar:', {
-                            'window.firebaseReady': window.firebaseReady,
-                            'window.currentJokeRef': window.currentJokeRef
-                        });
-                        window.initializeBenny();
-                    }, 2000);
-                } else {
-                    console.log('ℹ️ Auto-start NÃO ativado. shouldAutoStart =', window.shouldAutoStart);
-                }
+                // NÃO inicia automaticamente - aguarda clique em ENTER
+                console.log('✅ Firebase pronto. Aguardando clique em ENTER...');
             } catch (error) {
                 console.error('❌ ERRO AO INICIALIZAR FIREBASE:', error);
                 console.error('📋 Detalhes do erro:', {
