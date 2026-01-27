@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BENNY - The Digital Performer</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gold: #FFB800;
+            --primary-orange: #FF6B35;
+            --dark-bg: #0a0a0f;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark-bg);
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Canvas Container */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(10, 10, 15, 0.9) 0%, rgba(10, 10, 15, 0) 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        nav {
+            display: flex;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+            padding: 0.5rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-gold), var(--primary-orange));
+            transition: width 0.3s ease;
+        }
+
+        .nav-btn:hover::after,
+        .nav-btn.active::after {
+            width: 100%;
+        }
+
+        .nav-btn:hover {
+            color: var(--primary-gold);
+        }
+
+        .volume-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .volume-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+
+        .volume-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: #ffffff;
+        }
+
+        /* Footer/Social Bar */
+        .social-bar {
+            position: fixed;
+            bottom: 3rem;
+            right: 3rem;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .social-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .social-btn:hover {
+            background: rgba(255, 184, 0, 0.2);
+            border-color: var(--primary-gold);
+            transform: translateX(-5px);
+        }
+
+        .social-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: #ffffff;
+        }
+
+        .buy-btn {
+            width: auto;
+            height: 50px;
+            padding: 0 1.5rem;
+            border-radius: 25px;
+            background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-orange) 100%);
+            border: none;
+            color: #000000;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .buy-btn:hover {
+            transform: translateX(-5px) scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 184, 0, 0.4);
+        }
+
+        /* Contract Address */
+        .contract-box {
+            position: fixed;
+            bottom: 3rem;
+            left: 3rem;
+            z-index: 100;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .contract-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .contract-address {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #ffffff;
+        }
+
+        .copy-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 184, 0, 0.2);
+        }
+
+        .copy-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: #ffffff;
+        }
+
+        /* Side Panels */
+        .side-panel {
+            position: fixed;
+            top: 0;
+            right: -500px;
+            width: 500px;
+            height: 100vh;
+            background: var(--glass-bg);
+            border-left: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            z-index: 200;
+            padding: 6rem 3rem 3rem 3rem;
+            overflow-y: auto;
+            transition: right 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        .side-panel.visible {
+            right: 0;
+        }
+
+        .panel-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .panel-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .panel-close svg {
+            width: 20px;
+            height: 20px;
+            fill: #ffffff;
+        }
+
+        .panel-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .panel-content {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .panel-content p {
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-section {
+            margin-top: 2.5rem;
+        }
+
+        .panel-section h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary-gold);
+        }
+
+        /* Loading */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background: var(--dark-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        #loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #loading-text {
+            font-family: 'Poppins', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2rem;
+            letter-spacing: 0.2em;
+        }
+
+        .loading-bar {
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-gold), var(--primary-orange));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        #loading-percent {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Curtains */
+        #curtains {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .curtain {
+            position: absolute;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, #1a0000 0%, #3a0000 50%, #1a0000 100%);
+            transition: transform 1.5s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        .curtain-left { left: 0; }
+        .curtain-right { right: 0; }
+
+        #curtains.open .curtain-left { transform: translateX(-100%); }
+        #curtains.open .curtain-right { transform: translateX(100%); }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem 1.5rem;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            nav {
+                gap: 1.5rem;
+            }
+
+            .nav-btn {
+                font-size: 0.85rem;
+            }
+
+            .side-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            .social-bar {
+                bottom: 1.5rem;
+                right: 1.5rem;
+                gap: 0.75rem;
+            }
+
+            .social-btn,
+            .buy-btn {
+                width: 45px;
+                height: 45px;
+            }
+
+            .contract-box {
+                bottom: 1.5rem;
+                left: 1.5rem;
+                padding: 0.75rem 1rem;
+                font-size: 0.7rem;
+            }
+
+            .contract-address {
+                font-size: 0.7rem;
+                max-width: 150px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="logo" onclick="navigateTo('home')">BENNY</div>
+        <nav>
+            <button class="nav-btn active" data-view="home" onclick="navigateTo('home')">Home</button>
+            <button class="nav-btn" data-view="about" onclick="navigateTo('about')">About</button>
+            <button class="nav-btn" data-view="community" onclick="navigateTo('community')">Community</button>
+            <button class="volume-btn" onclick="toggleAudio()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                </svg>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Social Bar -->
+    <div class="social-bar">
+        <a href="https://twitter.com/bennycoin" target="_blank" class="social-btn" title="Twitter">
+            <svg viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+        </a>
+        <a href="https://t.me/bennycommunity" target="_blank" class="social-btn" title="Telegram">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.03-1.99 1.27-5.62 3.72-.53.36-1.01.54-1.44.52-.47-.01-1.38-.27-2.06-.49-.83-.27-1.49-.42-1.43-.88.03-.24.37-.49 1.02-.75 4-1.74 6.68-2.89 8.03-3.45 3.82-1.58 4.61-1.86 5.13-1.87.11 0 .37.03.53.17.14.11.17.26.19.37z"/>
+            </svg>
+        </a>
+        <a href="#" class="buy-btn">Buy Token</a>
+    </div>
+
+    <!-- Contract Address -->
+    <div class="contract-box">
+        <span class="contract-label">Contract</span>
+        <span class="contract-address" id="contract-address">0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb</span>
+        <button class="copy-btn" onclick="copyContract()">
+            <svg viewBox="0 0 24 24">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- About Panel -->
+    <div class="side-panel" id="about-panel">
+        <button class="panel-close" onclick="closePanel()">
+            <svg viewBox="0 0 24 24">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </button>
+        <h2 class="panel-title">About Benny</h2>
+        <div class="panel-content">
+            <p>
+                BENNY is not just a digital character - he's a revolution in entertainment and blockchain technology. Born from the intersection of AI, 3D art, and decentralized finance, Benny represents the future of digital performers.
+            </p>
+            <p>
+                With cutting-edge animation technology and a personality that captivates audiences worldwide, Benny is setting new standards for what's possible in the metaverse and beyond.
+            </p>
+
+            <div class="panel-section">
+                <h3>Technology</h3>
+                <p>
+                    Built with Three.js and powered by advanced 3D rendering, Benny comes to life in your browser with smooth animations and stunning visual effects. Every performance is rendered in real-time, creating a unique experience for each visitor.
+                </p>
+            </div>
+
+            <div class="panel-section">
+                <h3>Tokenomics</h3>
+                <p>
+                    BENNY token is designed for long-term growth and community engagement. With a fair launch and transparent distribution, every holder is part of Benny's journey to revolutionize digital entertainment.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Panel -->
+    <div class="side-panel" id="community-panel">
+        <button class="panel-close" onclick="closePanel()">
+            <svg viewBox="0 0 24 24">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </button>
+        <h2 class="panel-title">Community</h2>
+        <div class="panel-content">
+            <p>
+                Join thousands of BENNY enthusiasts from around the world. Our community is the heart of this project, driving innovation and spreading the word about the future of digital entertainment.
+            </p>
+
+            <div class="panel-section">
+                <h3>Social Channels</h3>
+                <p>
+                    Connect with us on Twitter for the latest updates, memes, and announcements. Join our Telegram group for real-time discussions, AMAs, and exclusive community events.
+                </p>
+            </div>
+
+            <div class="panel-section">
+                <h3>Get Involved</h3>
+                <p>
+                    Whether you're a holder, artist, developer, or just a fan, there's a place for you in the BENNY community. Share your ideas, create content, and help shape the future of this revolutionary project.
+                </p>
+            </div>
+
+            <div class="panel-section">
+                <h3>Roadmap</h3>
+                <p>
+                    We're just getting started. From NFT drops to metaverse integration, virtual concerts to interactive experiences - the future is bright and full of possibilities. Stay tuned for announcements and join us on this incredible journey.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading-overlay">
+        <div id="loading-text">BENNY</div>
+        <div class="loading-bar">
+            <div class="loading-progress" id="loading-progress"></div>
+        </div>
+        <div id="loading-percent">0%</div>
+    </div>
+
+    <!-- Curtains -->
+    <div id="curtains">
+        <div class="curtain curtain-left"></div>
+        <div class="curtain curtain-right"></div>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <script>
+        // ===== CONFIGURAÇÃO =====
+        const CONFIG = {
+            modelPath: 'mr_penguin.glb',
+            contractAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+            twitterUrl: 'https://twitter.com/bennycoin',
+            telegramUrl: 'https://t.me/bennycommunity',
+            buyUrl: '#'
+        };
+
+        // ===== VARIÁVEIS GLOBAIS =====
+        let scene, camera, renderer, model, mixer, clock;
+        let currentView = 'home';
+        let initialCameraRotation = 0;
+        let currentRotationY = 0;
+        let targetRotationY = 0;
+
+        // ===== ELEMENTOS DOM =====
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingProgress = document.getElementById('loading-progress');
+        const loadingPercent = document.getElementById('loading-percent');
+        const curtains = document.getElementById('curtains');
+        const contractAddressEl = document.getElementById('contract-address');
+        const aboutPanel = document.getElementById('about-panel');
+        const communityPanel = document.getElementById('community-panel');
+        const navButtons = document.querySelectorAll('.nav-btn');
+
+        // ===== INICIALIZAÇÃO =====
+        function init() {
+            contractAddressEl.textContent = CONFIG.contractAddress;
+
+            // Cria cena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0f);
+
+            // Cria câmera
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            // ===== RENDERER =====
+            renderer = new THREE.WebGLRenderer({
+                antialias: true,
+                powerPreference: "high-performance"
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.NoToneMapping;
+            renderer.shadowMap.enabled = false;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            clock = new THREE.Clock();
+
+            loadModel();
+            window.addEventListener('resize', onWindowResize);
+            animate();
+        }
+
+        // ===== CARREGAMENTO DO MODELO =====
+        function loadModel() {
+            const loader = new THREE.GLTFLoader();
+
+            loader.load(
+                CONFIG.modelPath,
+                (gltf) => {
+                    console.log('Model loaded!');
+                    model = gltf.scene;
+                    scene.add(model);
+
+                    // Câmera
+                    if (gltf.cameras && gltf.cameras.length > 0) {
+                        const glbCamera = gltf.cameras[0];
+                        camera.position.copy(glbCamera.position);
+                        camera.quaternion.copy(glbCamera.quaternion);
+                        camera.fov = glbCamera.fov || 50;
+                        camera.updateProjectionMatrix();
+                        initialCameraRotation = camera.rotation.y;
+                        currentRotationY = camera.rotation.y;
+                        targetRotationY = camera.rotation.y;
+                    } else {
+                        camera.position.set(0, 2, 6);
+                        camera.lookAt(0, 1.2, 0);
+                        initialCameraRotation = camera.rotation.y;
+                        currentRotationY = camera.rotation.y;
+                        targetRotationY = camera.rotation.y;
+                    }
+
+                    // Luzes do GLB
+                    let hasLights = false;
+                    gltf.scene.traverse((child) => {
+                        if (child.isLight) {
+                            hasLights = true;
+                            child.intensity = child.intensity * 0.0008;
+                        }
+                    });
+
+                    if (!hasLights) {
+                        const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+                        scene.add(ambient);
+                        const directional = new THREE.DirectionalLight(0xffffff, 1);
+                        directional.position.set(5, 10, 5);
+                        scene.add(directional);
+                    }
+
+                    // Materiais
+                    model.traverse((child) => {
+                        if (child.isMesh && child.material) {
+                            const materials = Array.isArray(child.material) ? child.material : [child.material];
+                            materials.forEach(mat => {
+                                if (mat.map) {
+                                    mat.map.colorSpace = THREE.SRGBColorSpace;
+                                    mat.map.minFilter = THREE.LinearMipmapLinearFilter;
+                                    mat.map.magFilter = THREE.LinearFilter;
+                                    mat.map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+                                    mat.map.needsUpdate = true;
+                                }
+                                mat.needsUpdate = true;
+                            });
+                        }
+                    });
+
+                    // Animações
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(model);
+                        gltf.animations.forEach((clip) => {
+                            const action = mixer.clipAction(clip);
+                            action.play();
+                        });
+                    }
+
+                    openCurtains();
+                },
+                (xhr) => {
+                    if (xhr.total > 0) {
+                        const percent = Math.round((xhr.loaded / xhr.total) * 100);
+                        loadingProgress.style.width = percent + '%';
+                        loadingPercent.textContent = percent + '%';
+                    }
+                },
+                (error) => {
+                    console.error('Error loading model:', error);
+                }
+            );
+        }
+
+        function openCurtains() {
+            setTimeout(() => {
+                loadingOverlay.classList.add('hidden');
+                curtains.classList.add('open');
+            }, 500);
+        }
+
+        // ===== NAVEGAÇÃO =====
+        function navigateTo(view) {
+            currentView = view;
+
+            navButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+
+            aboutPanel.classList.remove('visible');
+            communityPanel.classList.remove('visible');
+
+            if (view === 'about') {
+                aboutPanel.classList.add('visible');
+            } else if (view === 'community') {
+                communityPanel.classList.add('visible');
+            }
+
+            const baseRotation = initialCameraRotation || 0;
+            const rotations = { home: 0, about: 0.5, community: -0.5 };
+            targetRotationY = baseRotation + (rotations[view] || 0);
+        }
+
+        function closePanel() {
+            aboutPanel.classList.remove('visible');
+            communityPanel.classList.remove('visible');
+            navigateTo('home');
+        }
+
+        // ===== UTILIDADES =====
+        function toggleAudio() {
+            console.log('Toggle audio');
+        }
+
+        function copyContract() {
+            navigator.clipboard.writeText(CONFIG.contractAddress);
+            alert('Contract address copied!');
+        }
+
+        // ===== ANIMAÇÃO =====
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            if (mixer) mixer.update(delta);
+
+            currentRotationY += (targetRotationY - currentRotationY) * 0.05;
+            camera.rotation.y = currentRotationY;
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // ===== INICIAR =====
+        init();
+    </script>
+</body>
+</html>

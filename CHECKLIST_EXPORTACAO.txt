@@ -1,0 +1,116 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║   📋 CHECKLIST EXPORTAÇÃO GLB - BLENDER PARA THREE.JS            ║
+║   Marque cada item antes de exportar!                            ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════
+  🎯 ANTES DE EXPORTAR (NO BLENDER)
+═══════════════════════════════════════════════════════════════════
+
+PREPARAÇÃO:
+[ ] Arquivo → Dados Externos → Empacotar Todos em .blend
+[ ] Salvar arquivo .blend (Ctrl+S)
+[ ] Todos objetos visíveis no Outliner (ícone olho 👁️)
+[ ] Todos objetos habilitados para renderização (ícone câmera 📷)
+[ ] Câmera posicionada corretamente (Numpad 0 para ver)
+[ ] Luzes visíveis e com intensidade > 0
+[ ] Materiais usando Principled BSDF
+[ ] Texturas conectadas no Shader Editor
+[ ] Animações aparecem no Dope Sheet
+
+═══════════════════════════════════════════════════════════════════
+  🚀 CONFIGURAÇÕES DE EXPORTAÇÃO
+═══════════════════════════════════════════════════════════════════
+
+Arquivo → Exportar → glTF 2.0 (.glb)
+
+LOCAL:
+[ ] Pasta: C:\Users\NEUTRON\Documents\standup
+[ ] Nome: mr_penguin.glb
+[ ] Formato: GLB Binário ✓
+
+ABA "INCLUIR":
+[ ] Selecionados Somente: ❌ DESMARCADO
+[ ] Geometria Visível: ✓ MARCADO
+[ ] Geometria Renderizável: ✓ MARCADO
+[ ] Ativo: ✓ MARCADO
+[ ] Câmeras: ✓ MARCADO
+[ ] Luzes Pontuais: ✓ MARCADO (IMPORTANTE!)
+
+ABA "GEOMETRIA":
+[ ] Aplicar Modificadores: ✓ MARCADO
+[ ] UVs: ✓ MARCADO (ESSENCIAL!)
+[ ] Normais: ✓ MARCADO
+[ ] Tangentes: ✓ MARCADO
+
+ABA "ANIMAÇÃO":
+[ ] Exportar Animações: ✓ MARCADO
+[ ] Amostrar Animações: ✓ MARCADO
+
+ABA "MATERIAIS" (CRÍTICO!):
+[ ] Materiais: Exportar ✓
+[ ] Imagens: ✓ MARCADO (ESSENCIAL!)
+[ ] Formato: Automático (ou JPEG+PNG)
+[ ] Qualidade JPEG: 90
+
+═══════════════════════════════════════════════════════════════════
+  ✅ DEPOIS DA EXPORTAÇÃO
+═══════════════════════════════════════════════════════════════════
+
+[ ] Verificar tamanho do arquivo GLB (deve ter > 1 MB com texturas)
+[ ] Copiar/substituir mr_penguin.glb na pasta do projeto
+[ ] Abrir http://localhost:8000 no navegador
+[ ] Recarregar com cache limpo (Ctrl+Shift+R)
+[ ] Abrir Console (F12)
+[ ] Verificar logs:
+    [ ] "GLB loaded successfully"
+    [ ] "Using camera from GLB file"
+    [ ] "Light found: SpotLight" (ou outras luzes)
+    [ ] "Found X animations"
+[ ] Verificar visualmente:
+    [ ] Personagem colorido (não branco)
+    [ ] Palco com textura de madeira
+    [ ] Cortinas vermelhas
+    [ ] Plateia (mesas, cadeiras)
+    [ ] Paredes e cenário completo
+    [ ] Iluminação funcionando
+
+═══════════════════════════════════════════════════════════════════
+  🐛 SE ALGO DEU ERRADO
+═══════════════════════════════════════════════════════════════════
+
+❌ AINDA BRANCO SEM TEXTURAS:
+   → Voltar ao Blender
+   → Arquivo → Dados Externos → Empacotar Todos
+   → Salvar .blend
+   → Exportar novamente
+
+❌ OBJETOS FALTANDO:
+   → Verificar Outliner (ícones 👁️ e 📷 ativos)
+   → Exportar novamente
+
+❌ SEM ILUMINAÇÃO:
+   → Marcar "Luzes Pontuais" na exportação
+   → Aumentar intensidade das luzes no Blender
+   → Exportar novamente
+
+❌ CÂMERA ERRADA:
+   → Selecionar câmera
+   → Ctrl+Numpad 0
+   → Ajustar posição
+   → Marcar "Câmeras" na exportação
+   → Exportar novamente
+
+═══════════════════════════════════════════════════════════════════
+
+📌 LEMBRE-SE:
+   • SEMPRE empacote texturas antes!
+   • SEMPRE salve o .blend antes de exportar!
+   • Marque: Câmeras, Luzes Pontuais, UVs, Imagens!
+   • Formato GLB Binário (não GLTF separado)!
+
+═══════════════════════════════════════════════════════════════════
+
+✨ Imprima este checklist ou mantenha em outra tela! ✨

@@ -1,0 +1,7 @@
+# Arquivos GLB muito grandes - hospedar em CDN separado
+*.glb
+
+# Arquivos desnecessários para produção
+*.md
+CHECKLIST_EXPORTACAO.txt
+.claude/

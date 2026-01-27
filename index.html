@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mr. Penguin Stand-Up Comedy</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0a0a0f;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #curtains {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .curtain {
+            position: absolute;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, #8b0000 0%, #dc143c 50%, #8b0000 100%);
+            transition: transform 1.5s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        .curtain::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(0,0,0,0.1) 50px, rgba(0,0,0,0.1) 60px);
+        }
+
+        .curtain-left { left: 0; }
+        .curtain-right { right: 0; }
+
+        #curtains.open .curtain-left { transform: translateX(-100%); }
+        #curtains.open .curtain-right { transform: translateX(100%); }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        #loading-overlay.hidden { opacity: 0; }
+
+        #loading-text {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 3rem;
+            color: #ffea00;
+            text-shadow: 0 0 20px #ffea00, 0 0 40px #ffea00;
+            margin-bottom: 2rem;
+            letter-spacing: 0.3rem;
+        }
+
+        #loading-bar-container {
+            width: 300px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #loading-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ffea00, #ff2d95);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        #loading-percent {
+            color: #fff;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+        }
+
+        #ui-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        #ui-layer > * { pointer-events: auto; }
+
+        #volume-btn {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.5rem;
+        }
+
+        #volume-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #00f5ff;
+        }
+
+        /* REMOVIDO - Sistema de piadas */
+        #joke-display {
+            display: none !important;
+        }
+
+        #joke-text {
+            display: none !important;
+        }
+
+        #nav-buttons {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .nav-btn.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #ffffff;
+        }
+
+        /* Animação de flutuação sutil para About panel (subir e descer 5px) */
+        @keyframes floatAbout {
+            0%, 100% {
+                transform: perspective(1000px) translateY(calc(-50% + 0px)) translateX(0) rotateY(8deg);
+            }
+            50% {
+                transform: perspective(1000px) translateY(calc(-50% - 5px)) translateX(0) rotateY(8deg);
+            }
+        }
+
+        /* Animação de flutuação sutil para Community panel (subir e descer 5px) */
+        @keyframes floatCommunity {
+            0%, 100% {
+                transform: perspective(1000px) translateY(calc(-50% + 0px)) translateX(0) rotateY(-8deg);
+            }
+            50% {
+                transform: perspective(1000px) translateY(calc(-50% - 5px)) translateX(0) rotateY(-8deg);
+            }
+        }
+
+        .panel {
+            position: fixed;
+            top: 50%;
+            width: 350px;
+            max-height: 70vh;
+            padding: 32px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            box-shadow: 20px 20px 60px rgba(0, 0, 0, 0.8), -5px -5px 20px rgba(255, 255, 255, 0.05);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all 0.4s ease;
+            z-index: 100;
+            overflow-y: auto;
+            transform-style: preserve-3d;
+        }
+
+        .panel.visible {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        #about-panel {
+            left: 60px;
+            transform: perspective(1000px) translateY(-50%) translateX(-30px) rotateY(8deg);
+            position: relative;
+        }
+
+        #about-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, rgba(255,255,255,0.3), transparent);
+            border-radius: 16px 0 0 16px;
+        }
+
+        #about-panel.visible {
+            transform: perspective(1000px) translateY(calc(-50% + 0px)) translateX(0) rotateY(8deg);
+            animation: floatAbout 4s ease-in-out infinite;
+            box-shadow: 25px 25px 50px rgba(0, 0, 0, 0.7);
+        }
+
+        #about-panel.visible:hover {
+            animation: none;
+            transform: perspective(1000px) translateY(calc(-50% - 3px)) translateX(0) rotateY(12deg) scale(1.02);
+            box-shadow: 30px 30px 60px rgba(0, 0, 0, 0.8), -5px -5px 25px rgba(255, 255, 255, 0.08);
+        }
+
+        #community-panel {
+            right: 60px;
+            left: auto;
+            transform: perspective(1000px) translateY(-50%) translateX(30px) rotateY(-8deg);
+            position: relative;
+        }
+
+        #community-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, rgba(255,255,255,0.3), transparent);
+            border-radius: 0 16px 16px 0;
+        }
+
+        #community-panel.visible {
+            transform: perspective(1000px) translateY(calc(-50% + 0px)) translateX(0) rotateY(-8deg);
+            animation: floatCommunity 4s ease-in-out infinite;
+            box-shadow: 25px 25px 50px rgba(0, 0, 0, 0.7);
+        }
+
+        #community-panel.visible:hover {
+            animation: none;
+            transform: perspective(1000px) translateY(calc(-50% - 3px)) translateX(0) rotateY(-12deg) scale(1.02);
+            box-shadow: -30px 30px 60px rgba(0, 0, 0, 0.8), 5px -5px 25px rgba(255, 255, 255, 0.08);
+        }
+
+        .panel-title {
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .panel-content {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .panel-content p { margin-bottom: 1rem; }
+
+        .social-btn-panel {
+            display: block;
+            width: 100%;
+            padding: 14px 20px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .social-btn-panel:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .contract-container { margin: 1.5rem 0; }
+        .contract-label { color: #888; font-size: 0.9rem; margin-bottom: 0.5rem; }
+
+        .contract-box {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 0.8rem;
+            gap: 0.5rem;
+        }
+
+        #contract-address {
+            flex: 1;
+            color: #fff;
+            font-family: monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+        }
+
+        #copy-btn {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #ff2d95, #ff6b6b);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #copy-btn.copied { background: linear-gradient(135deg, #39ff14, #00ff88); }
+
+        .social-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .twitter-btn { background: linear-gradient(135deg, #1da1f2, #0d8bd9); color: #fff; }
+        .buy-btn { background: linear-gradient(135deg, #39ff14, #00ff88); color: #000; }
+
+        /* REMOVIDO - Laugh visualizer */
+        #laugh-visualizer {
+            display: none !important;
+        }
+
+        .viz-bar {
+            width: 6px;
+            height: 30px;
+            background: linear-gradient(to top, #ff2d95, #ffea00);
+            border-radius: 3px;
+            animation: vizPulse 0.3s ease infinite alternate;
+        }
+
+        .viz-bar:nth-child(2) { animation-delay: 0.1s; }
+        .viz-bar:nth-child(3) { animation-delay: 0.2s; }
+        .viz-bar:nth-child(4) { animation-delay: 0.15s; }
+
+        @keyframes vizPulse {
+            from { transform: scaleY(0.3); }
+            to { transform: scaleY(1); }
+        }
+
+        /* Indicador de fala do Benny */
+        #benny-speaking {
+            position: fixed;
+            bottom: 6rem;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            padding: 16px 32px;
+            background: rgba(255, 46, 149, 0.9);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            z-index: 100;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(255, 46, 149, 0.5);
+        }
+
+        #benny-speaking.active {
+            transform: translateX(-50%) scale(1);
+        }
+
+        #benny-speaking::before {
+            content: '🎤';
+            margin-right: 10px;
+            font-size: 20px;
+            animation: micPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes micPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <div id="curtains">
+        <div class="curtain curtain-left"></div>
+        <div class="curtain curtain-right"></div>
+    </div>
+
+    <div id="loading-overlay">
+        <div id="loading-text">LOADING</div>
+        <div id="loading-bar-container">
+            <div id="loading-bar"></div>
+        </div>
+        <div id="loading-percent">0%</div>
+    </div>
+
+    <div id="ui-layer">
+        <button id="volume-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+            </svg>
+        </button>
+
+        <div id="joke-display">
+            <div id="joke-text"></div>
+        </div>
+
+        <div id="nav-buttons">
+            <button class="nav-btn" data-view="about">About</button>
+            <button class="nav-btn active" data-view="home">Home</button>
+            <button class="nav-btn" data-view="community">Community</button>
+        </div>
+
+        <div id="about-panel" class="panel">
+            <h2 class="panel-title">About Benny</h2>
+            <div class="panel-content">
+                <p>Welcome to Benny's Stand-Up Comedy show. The funniest penguin in the crypto world bringing laughs to the blockchain.</p>
+                <p>Benny is a digital performer combining cutting-edge 3D animation with blockchain technology, creating a unique entertainment experience in the metaverse.</p>
+                <p>Built with Three.js and powered by Web3, Benny represents the future of digital entertainment and community engagement.</p>
+            </div>
+        </div>
+
+        <div id="community-panel" class="panel">
+            <h2 class="panel-title">Community</h2>
+            <div class="panel-content">
+                <p>Join the Benny community and be part of the revolution in digital entertainment.</p>
+
+                <div style="margin: 24px 0;">
+                    <a href="#" class="social-btn-panel" id="twitter-link" target="_blank">Twitter / X</a>
+                    <a href="#" class="social-btn-panel" target="_blank">Telegram</a>
+                    <a href="#" class="social-btn-panel" id="buy-link" target="_blank">Buy Token</a>
+                </div>
+
+                <div class="contract-container">
+                    <div class="contract-label">Contract Address:</div>
+                    <div class="contract-box">
+                        <span id="contract-address"></span>
+                        <button id="copy-btn">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="laugh-visualizer">
+            <div class="viz-bar"></div>
+            <div class="viz-bar"></div>
+            <div class="viz-bar"></div>
+            <div class="viz-bar"></div>
+        </div>
+
+        <div id="benny-speaking">Benny is talking</div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        // ===== CONFIGURAÇÃO =====
+        const AUTO_START = false; // MANTER FALSE - só ativar quando lançar
+
+        const CONFIG = {
+            modelPath: './mr_penguin.glb',
+            contractAddress: '7UxJfQKSKvnXQPvMQDH9YPMEJg8z3ZrD4KwXmXXXpump',
+            twitterUrl: 'https://x.com/mrpenguinstand',
+            buyUrl: 'https://pump.fun/7UxJfQKSKvnXQPvMQDH9YPMEJg8z3ZrD4KwXmXXXpump',
+
+            rotations: {
+                home: 0,
+                about: 0.4,
+                community: -0.4
+            },
+
+            jokes: [
+                "Por que o pinguim não sente frio? Porque ele nasceu no gelo! 🥶",
+                "Eu investi em cripto e agora moro num iglu... de luxo! 🏠",
+                "Qual é o animal mais engraçado? O pinguim! Porque já nasce de smoking! 🤵",
+                "Minha carteira cripto é tão fria quanto a Antártida... mas pelo menos eu tenho estilo! 😎",
+                "Por que pinguins são ótimos traders? Porque sabem quando o mercado está congelado! 📉"
+            ],
+
+            jokeDisplayTime: 5000,
+            jokePauseTime: 1500
+        };
+
+        // ===== VARIÁVEIS GLOBAIS =====
+        let scene, camera, renderer, mixer, model;
+        let currentView = 'home';
+        let isMuted = false;
+        let audioContext, laughBuffer;
+        let jokeInterval;
+        let currentJokeIndex = 0;
+        let isAudioUnlocked = false;
+        
+        // Câmeras do GLB
+        let glbCameras = {};
+        let targetCameraPosition = new THREE.Vector3();
+        let targetCameraQuaternion = new THREE.Quaternion();
+        
+        // Velocidade da animação (1.0 = normal, 0.5 = metade, 2.0 = dobro)
+        const ANIMATION_SPEED = 2.5; // BEM mais rápido
+
+        // ===== ELEMENTOS DOM =====
+        const curtains = document.getElementById('curtains');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingBar = document.getElementById('loading-bar');
+        const loadingPercent = document.getElementById('loading-percent');
+        const volumeBtn = document.getElementById('volume-btn');
+        const jokeDisplay = document.getElementById('joke-display');
+        const jokeText = document.getElementById('joke-text');
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const aboutPanel = document.getElementById('about-panel');
+        const communityPanel = document.getElementById('community-panel');
+        const laughVisualizer = document.getElementById('laugh-visualizer');
+        const contractAddressEl = document.getElementById('contract-address');
+        const copyBtn = document.getElementById('copy-btn');
+        const twitterLink = document.getElementById('twitter-link');
+        const buyLink = document.getElementById('buy-link');
+        const bennySpeaking = document.getElementById('benny-speaking');
+
+        // ===== INICIALIZAÇÃO =====
+        function init() {
+            contractAddressEl.textContent = CONFIG.contractAddress;
+            twitterLink.href = CONFIG.twitterUrl;
+            buyLink.href = CONFIG.buyUrl;
+
+            // Cria cena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a1a);
+
+            // Cria câmera
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            // ===== RENDERER - QUALIDADE E REALISMO =====
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                powerPreference: "high-performance",
+                alpha: false,
+                stencil: false
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            
+            // Cor e tone mapping realista
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 0.7; // Mais escuro para manter efeito de spotlight
+            
+            // Sombras de alta qualidade
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.shadowMap.autoUpdate = true;
+            
+            // Física de luz realista
+            renderer.useLegacyLights = false;
+            
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            loadModel();
+            setupAudio();
+            setupEventListeners();
+            window.addEventListener('resize', onWindowResize);
+            animate();
+        }
+
+        // ===== CARREGAMENTO DO MODELO =====
+        function loadModel() {
+            const loader = new GLTFLoader();
+
+            loader.load(
+                CONFIG.modelPath + '?t=' + Date.now(), // Evita cache
+                (gltf) => {
+                    console.log('✅ GLB carregado!');
+
+                    model = gltf.scene;
+                    scene.add(model);
+
+                    // ===== CÂMERAS DO GLB =====
+                    if (gltf.cameras && gltf.cameras.length > 0) {
+                        console.log('📷 Câmeras encontradas:', gltf.cameras.length);
+                        
+                        // Percorre a cena para encontrar as câmeras com suas posições
+                        gltf.scene.traverse((child) => {
+                            if (child.isCamera) {
+                                const camName = child.name.toLowerCase();
+                                glbCameras[camName] = {
+                                    position: child.position.clone(),
+                                    quaternion: child.quaternion.clone(),
+                                    fov: child.fov || 50
+                                };
+                                console.log('📷 Câmera salva:', child.name);
+                            }
+                        });
+                        
+                        // Se não encontrou nas traversals, usa as câmeras do array
+                        if (Object.keys(glbCameras).length === 0) {
+                            gltf.cameras.forEach((cam, index) => {
+                                const camName = cam.name ? cam.name.toLowerCase() : `camera_${index}`;
+                                glbCameras[camName] = {
+                                    position: cam.position.clone(),
+                                    quaternion: cam.quaternion.clone(),
+                                    fov: cam.fov || 50
+                                };
+                                console.log('📷 Câmera salva (array):', camName);
+                            });
+                        }
+                        
+                        // Define câmera inicial (home ou primeira disponível)
+                        const homeCamera = glbCameras['home'] || glbCameras['camera'] || Object.values(glbCameras)[0];
+                        if (homeCamera) {
+                            camera.position.copy(homeCamera.position);
+                            camera.quaternion.copy(homeCamera.quaternion);
+                            camera.fov = homeCamera.fov;
+                            camera.updateProjectionMatrix();
+                            
+                            targetCameraPosition.copy(homeCamera.position);
+                            targetCameraQuaternion.copy(homeCamera.quaternion);
+                        }
+                        
+                        console.log('✅ Câmeras configuradas!');
+                        console.log('📷 Câmeras disponíveis:', Object.keys(glbCameras));
+                    } else {
+                        camera.position.set(0, 2, 6);
+                        camera.lookAt(0, 1.2, 0);
+                        targetCameraPosition.copy(camera.position);
+                        targetCameraQuaternion.copy(camera.quaternion);
+                        console.log('⚠️ Nenhuma câmera no GLB, usando padrão');
+                    }
+
+                    // ===== LUZES DO GLB - USANDO SOMENTE AS DO BLENDER =====
+                    let hasLights = false;
+                    gltf.scene.traverse((child) => {
+                        if (child.isLight) {
+                            hasLights = true;
+                            
+                            const lightName = child.name.toLowerCase();
+                            
+                            // Luz PRINCIPAL (foco no personagem) - mais forte
+                            if (lightName.includes('principal') || lightName.includes('main') || lightName.includes('key')) {
+                                child.intensity = child.intensity * 0.001; // Mais forte
+                                console.log('💡 LUZ PRINCIPAL:', child.name, '- Intensidade:', child.intensity.toFixed(2));
+                            } else {
+                                // Outras luzes - mantém mais fracas
+                                child.intensity = child.intensity * 0.0005;
+                                console.log('💡 Luz secundária:', child.name, '- Intensidade:', child.intensity.toFixed(2));
+                            }
+                            
+                            // Sombras de alta qualidade
+                            child.castShadow = true;
+                            
+                            if (child.isSpotLight) {
+                                child.penumbra = 0.5;
+                                child.decay = 2;
+                                
+                                child.shadow.mapSize.width = 2048;
+                                child.shadow.mapSize.height = 2048;
+                                child.shadow.camera.near = 0.1;
+                                child.shadow.camera.far = 50;
+                                child.shadow.bias = -0.0001;
+                                child.shadow.normalBias = 0.02;
+                                child.shadow.radius = 4;
+                            }
+                            
+                            if (child.isPointLight) {
+                                child.decay = 2;
+                                child.shadow.mapSize.width = 1024;
+                                child.shadow.mapSize.height = 1024;
+                                child.shadow.bias = -0.0001;
+                                child.shadow.radius = 3;
+                            }
+                        }
+                    });
+
+                    console.log('💡 Usando SOMENTE as luzes do GLB!');
+
+                    // SEM luz ambiente extra - apenas as luzes do GLB
+
+                    // Se não tiver luzes no GLB, adiciona luzes básicas realistas
+                    if (!hasLights) {
+                        const keyLight = new THREE.SpotLight(0xffffff, 50);
+                        keyLight.position.set(5, 10, 5);
+                        keyLight.castShadow = true;
+                        keyLight.shadow.mapSize.width = 2048;
+                        keyLight.shadow.mapSize.height = 2048;
+                        keyLight.shadow.bias = -0.0001;
+                        keyLight.penumbra = 0.5;
+                        scene.add(keyLight);
+                        
+                        const fillLight = new THREE.DirectionalLight(0x8888ff, 0.3);
+                        fillLight.position.set(-5, 5, -5);
+                        scene.add(fillLight);
+                    }
+
+                    // ===== MATERIAIS - CONFIGURAÇÃO REALISTA =====
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            // Sombras
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                            
+                            if (child.material) {
+                                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                                materials.forEach(mat => {
+                                    // Configura texturas com colorSpace correto
+                                    if (mat.map) {
+                                        mat.map.colorSpace = THREE.SRGBColorSpace;
+                                        mat.map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+                                    }
+                                    if (mat.emissiveMap) {
+                                        mat.emissiveMap.colorSpace = THREE.SRGBColorSpace;
+                                    }
+                                    
+                                    // Configurações PBR realistas
+                                    if (mat.isMeshStandardMaterial || mat.isMeshPhysicalMaterial) {
+                                        mat.envMapIntensity = 0.5;
+                                    }
+                                    
+                                    mat.needsUpdate = true;
+                                });
+                            }
+                        }
+                    });
+                    
+                    console.log('✅ Materiais configurados');
+
+                    // ===== CORREÇÃO DE NORMAIS PARA TODO O CENÁRIO (EXCETO PERSONAGEM) =====
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            const name = child.name.toLowerCase();
+                            
+                            // Lista de nomes que identificam o PERSONAGEM (não aplicar correção)
+                            const isCharacter = 
+                                name.includes('penguin') || 
+                                name.includes('personagem') ||
+                                name.includes('character') ||
+                                name.includes('sketchfab') ||
+                                name.includes('mr_penguin') ||
+                                name.includes('tripo') ||
+                                name.includes('body') ||
+                                name.includes('head') ||
+                                name.includes('arm') ||
+                                name.includes('leg') ||
+                                name.includes('hand') ||
+                                name.includes('foot') ||
+                                name.includes('mesh_0') ||
+                                (child.parent && child.parent.name.toLowerCase().includes('armature'));
+                            
+                            // Se NÃO for personagem, aplica correção de normais apenas
+                            if (!isCharacter) {
+                                // Recalcula normais da geometria para suavizar
+                                child.geometry.computeVertexNormals();
+                                
+                                if (child.material) {
+                                    const materials = Array.isArray(child.material) ? child.material : [child.material];
+                                    materials.forEach(mat => {
+                                        // Remove normal/bump map que podem causar artefatos
+                                        if (mat.normalMap) mat.normalMap = null;
+                                        if (mat.bumpMap) mat.bumpMap = null;
+                                        
+                                        // Força smooth shading
+                                        mat.flatShading = false;
+                                        
+                                        mat.needsUpdate = true;
+                                    });
+                                }
+                            }
+                        }
+                    });
+                    
+                    console.log('✅ Normais do cenário corrigidas');
+
+                    // ===== ANIMAÇÕES - TOCAR COMPLETA EM LOOP =====
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(model);
+                        
+                        // Configura velocidade da animação
+                        mixer.timeScale = ANIMATION_SPEED;
+                        
+                        gltf.animations.forEach((clip) => {
+                            console.log('🎬 Animação encontrada:', clip.name, '- Duração:', clip.duration.toFixed(2) + 's', '- Tracks:', clip.tracks.length);
+                            
+                            // IGNORA animações muito curtas (menos de 15 segundos)
+                            // A "Armature" de 8.63s está cortada, ignoramos ela
+                            if (clip.duration < 15) {
+                                console.log('⏭️ Ignorando animação curta:', clip.name);
+                                return; // Pula para próxima
+                            }
+                            
+                            const action = mixer.clipAction(clip);
+                            
+                            // Garante que toca em LOOP infinito
+                            action.setLoop(THREE.LoopRepeat, Infinity);
+                            
+                            // Começa do início
+                            action.reset();
+                            
+                            // Peso total (100% da animação)
+                            action.setEffectiveWeight(1);
+                            
+                            // Tempo total (não corta)
+                            action.setEffectiveTimeScale(1);
+                            
+                            // Não para no final
+                            action.clampWhenFinished = false;
+                            
+                            // Inicia a animação
+                            action.play();
+                            
+                            console.log('✅ Animação ativada:', clip.name);
+                        });
+                        
+                        console.log('✅ Animações iniciadas (velocidade:', ANIMATION_SPEED + 'x)');
+                    } else {
+                        console.log('⚠️ Nenhuma animação encontrada no GLB!');
+                    }
+
+                    openCurtains();
+                },
+                (xhr) => {
+                    if (xhr.total > 0) {
+                        const percent = Math.round((xhr.loaded / xhr.total) * 100);
+                        loadingBar.style.width = percent + '%';
+                        loadingPercent.textContent = percent + '%';
+                    }
+                },
+                (error) => {
+                    console.error('❌ Erro:', error);
+                    loadingPercent.textContent = 'Erro ao carregar';
+                }
+            );
+        }
+
+        function openCurtains() {
+            setTimeout(() => {
+                loadingOverlay.classList.add('hidden');
+                curtains.classList.add('open');
+
+                // Só inicia automaticamente se AUTO_START = true
+                if (AUTO_START) {
+                    console.log('🎬 AUTO_START ativado - Benny começará a contar piadas');
+                    setTimeout(() => window.startBenny(), 2000);
+                } else {
+                    console.log('🎬 AUTO_START desativado - Digite startBenny() no console para ativar');
+                }
+            }, 500);
+        }
+
+        // ===== ÁUDIO =====
+        function setupAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                generateLaughSound();
+            } catch (e) {}
+        }
+
+        function unlockAudio() {
+            if (!isAudioUnlocked && audioContext && audioContext.state === 'suspended') {
+                audioContext.resume().then(() => { isAudioUnlocked = true; });
+            }
+        }
+
+        function generateLaughSound() {
+            if (!audioContext) return;
+            const sampleRate = audioContext.sampleRate;
+            const duration = 1.5;
+            const bufferSize = sampleRate * duration;
+            laughBuffer = audioContext.createBuffer(1, bufferSize, sampleRate);
+            const data = laughBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                const t = i / sampleRate;
+                const env = Math.exp(-t * 2) * 0.3;
+                data[i] = (Math.random() * 2 - 1) * env + Math.sin(Math.PI * 200 * t) * env * 0.5;
+            }
+        }
+
+        function playLaugh() {
+            if (!audioContext || !laughBuffer || isMuted) return;
+            unlockAudio();
+            const source = audioContext.createBufferSource();
+            source.buffer = laughBuffer;
+            const gain = audioContext.createGain();
+            gain.gain.value = 0.15;
+            source.connect(gain);
+            gain.connect(audioContext.destination);
+            source.start(0);
+            laughVisualizer.classList.add('active');
+            setTimeout(() => laughVisualizer.classList.remove('active'), 1500);
+        }
+
+        // ===== SISTEMA DE PIADAS COM IA =====
+        let isPlayingJoke = false;
+        let jokeLoopEnabled = false;
+
+        async function playBennyJoke(retries = 3) {
+            if (isPlayingJoke) return;
+            isPlayingJoke = true;
+
+            try {
+                // 1. Chamar API backend
+                console.log('🎭 Gerando piada com IA...');
+                const response = await fetch('/api/generate-joke', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to generate joke');
+                }
+
+                console.log('🎤 BENNY DISSE:', data.joke);
+
+                // 2. Converter base64 para audio blob
+                const audioData = atob(data.audio);
+                const audioArray = new Uint8Array(audioData.length);
+                for (let i = 0; i < audioData.length; i++) {
+                    audioArray[i] = audioData.charCodeAt(i);
+                }
+                const audioBlob = new Blob([audioArray], { type: data.audioFormat || 'audio/mpeg' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+
+                // 3. Criar e tocar áudio
+                const audio = new Audio(audioUrl);
+
+                // Mostrar indicador quando começar a tocar
+                audio.addEventListener('play', () => {
+                    bennySpeaking.classList.add('active');
+                    console.log('🎤 Benny falando...');
+                });
+
+                // Esconder indicador quando terminar
+                audio.addEventListener('ended', () => {
+                    bennySpeaking.classList.remove('active');
+                    URL.revokeObjectURL(audioUrl);
+                    console.log('✅ Piada finalizada');
+
+                    // Aguardar 8-12 segundos antes da próxima piada
+                    if (jokeLoopEnabled && currentView === 'home') {
+                        const delay = 8000 + Math.random() * 4000; // 8-12 segundos
+                        console.log(`⏰ Próxima piada em ${(delay/1000).toFixed(1)}s`);
+                        setTimeout(() => {
+                            if (jokeLoopEnabled && currentView === 'home') {
+                                isPlayingJoke = false;
+                                playBennyJoke();
+                            } else {
+                                isPlayingJoke = false;
+                            }
+                        }, delay);
+                    } else {
+                        isPlayingJoke = false;
+                    }
+                });
+
+                // Handler de erro no áudio
+                audio.addEventListener('error', (e) => {
+                    console.error('❌ Erro ao tocar áudio:', e);
+                    bennySpeaking.classList.remove('active');
+                    URL.revokeObjectURL(audioUrl);
+                    isPlayingJoke = false;
+                });
+
+                // Desbloquear áudio e tocar
+                unlockAudio();
+                await audio.play();
+
+            } catch (error) {
+                console.error('❌ Erro ao gerar piada:', error);
+                bennySpeaking.classList.remove('active');
+
+                // Sistema de retry
+                if (retries > 0) {
+                    console.log(`🔄 Tentando novamente... (${retries} tentativas restantes)`);
+                    isPlayingJoke = false;
+                    setTimeout(() => playBennyJoke(retries - 1), 2000);
+                } else {
+                    console.error('❌ Todas as tentativas falharam. Aguardando 30 segundos...');
+                    // Cooldown de 30 segundos após falhas
+                    if (jokeLoopEnabled && currentView === 'home') {
+                        setTimeout(() => {
+                            if (jokeLoopEnabled && currentView === 'home') {
+                                isPlayingJoke = false;
+                                playBennyJoke();
+                            } else {
+                                isPlayingJoke = false;
+                            }
+                        }, 30000);
+                    } else {
+                        isPlayingJoke = false;
+                    }
+                }
+            }
+        }
+
+        // ===== FUNÇÕES DE CONTROLE PÚBLICO (via console) =====
+        window.startBenny = function() {
+            if (jokeLoopEnabled) {
+                console.log('⚠️ Benny já está ativo!');
+                return;
+            }
+            jokeLoopEnabled = true;
+            console.log('🎭 Sistema de piadas ativado! Benny começará a contar piadas.');
+            playBennyJoke();
+        };
+
+        window.stopBenny = function() {
+            jokeLoopEnabled = false;
+            bennySpeaking.classList.remove('active');
+            console.log('⏸️ Sistema de piadas pausado. Benny foi silenciado.');
+        };
+
+        // ===== PIADAS (DESATIVADO) =====
+        /*
+        function startJokeLoop() {
+            showJoke();
+            jokeInterval = setInterval(() => {
+                hideJoke();
+                setTimeout(() => {
+                    currentJokeIndex = (currentJokeIndex + 1) % CONFIG.jokes.length;
+                    showJoke();
+                }, CONFIG.jokePauseTime);
+            }, CONFIG.jokeDisplayTime + CONFIG.jokePauseTime);
+        }
+
+        function showJoke() {
+            if (currentView !== 'home') return;
+            jokeText.textContent = CONFIG.jokes[currentJokeIndex];
+            jokeDisplay.classList.add('visible');
+            setTimeout(() => playLaugh(), 2000);
+        }
+
+        function hideJoke() {
+            jokeDisplay.classList.remove('visible');
+        }
+
+        function stopJokeLoop() {
+            if (jokeInterval) {
+                clearInterval(jokeInterval);
+                jokeInterval = null;
+            }
+            hideJoke();
+        }
+        */
+
+        // ===== NAVEGAÇÃO =====
+        function changeView(view) {
+            if (view === currentView) return;
+            currentView = view;
+
+            navButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+
+            aboutPanel.classList.remove('visible');
+            communityPanel.classList.remove('visible');
+
+            // ===== TROCA DE CÂMERA BASEADO NA VIEW =====
+            // Procura câmera pelo nome (about, community, home)
+            let targetCamera = null;
+            
+            // Tenta encontrar câmera com nome exato ou similar
+            const possibleNames = [
+                view,
+                view + '_camera',
+                'camera_' + view,
+                'cam_' + view
+            ];
+            
+            for (const name of possibleNames) {
+                if (glbCameras[name]) {
+                    targetCamera = glbCameras[name];
+                    console.log('📷 Trocando para câmera:', name);
+                    break;
+                }
+            }
+            
+            // Se não encontrou, usa a câmera home ou a primeira disponível
+            if (!targetCamera) {
+                targetCamera = glbCameras['home'] || glbCameras['camera'] || Object.values(glbCameras)[0];
+                console.log('📷 Câmera não encontrada para', view, '- usando padrão');
+            }
+            
+            // Define posição/rotação alvo para transição suave
+            if (targetCamera) {
+                targetCameraPosition.copy(targetCamera.position);
+                targetCameraQuaternion.copy(targetCamera.quaternion);
+                
+                // Atualiza FOV se diferente
+                if (camera.fov !== targetCamera.fov) {
+                    camera.fov = targetCamera.fov;
+                    camera.updateProjectionMatrix();
+                }
+            }
+
+            // Sistema de piadas continua rodando independente da view
+            // (usuário controla via startBenny/stopBenny no console)
+
+            if (view === 'about') {
+                setTimeout(() => aboutPanel.classList.add('visible'), 500);
+            } else if (view === 'community') {
+                setTimeout(() => communityPanel.classList.add('visible'), 500);
+            }
+        }
+
+        // ===== EVENTOS =====
+        function setupEventListeners() {
+            document.addEventListener('click', unlockAudio, { once: true });
+
+            volumeBtn.addEventListener('click', () => {
+                isMuted = !isMuted;
+                volumeBtn.textContent = isMuted ? '🔇' : '🔊';
+            });
+
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', () => changeView(btn.dataset.view));
+            });
+
+            copyBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(CONFIG.contractAddress);
+                    copyBtn.textContent = 'Copied!';
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                } catch (err) {}
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') changeView('about');
+                else if (e.key === 'ArrowRight') changeView('community');
+                else if (e.key === 'Escape' || e.key === ' ') { changeView('home'); e.preventDefault(); }
+                else if (e.key === 'm' || e.key === 'M') volumeBtn.click();
+            });
+        }
+
+        // ===== LOOP DE ANIMAÇÃO =====
+        const clock = new THREE.Clock();
+        const CAMERA_LERP_SPEED = 0.03; // Velocidade da transição de câmera (0.01 = lento, 0.1 = rápido)
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            if (mixer) mixer.update(delta);
+
+            // Transição suave da posição da câmera
+            camera.position.lerp(targetCameraPosition, CAMERA_LERP_SPEED);
+            
+            // Transição suave da rotação da câmera
+            camera.quaternion.slerp(targetCameraQuaternion, CAMERA_LERP_SPEED);
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        init();
+    </script>
+</body>
+</html>

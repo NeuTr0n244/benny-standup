@@ -1,0 +1,71 @@
+════════════════════════════════════════════════════════
+COMANDOS PARA CONECTAR AO GITHUB
+════════════════════════════════════════════════════════
+
+1. CRIAR REPOSITÓRIO NO GITHUB
+   - Acesse: https://github.com/new
+   - Nome: benny-standup
+   - Visibilidade: Public
+   - NÃO inicialize com README
+   - Clique em "Create repository"
+
+2. ADICIONAR REMOTE E FAZER PUSH
+   Execute (substitua SEU_USERNAME):
+
+   cd C:\Users\NEUTRON\Documents\standup
+   git remote add origin https://github.com/SEU_USERNAME/benny-standup.git
+   git branch -M main
+   git push -u origin main
+
+3. CONECTAR VERCEL AO GITHUB
+   Acesse: https://vercel.com/vito01hugo02-9635s-projects/standup/settings/git
+
+   - Clique em "Connect Git Repository"
+   - Selecione GitHub
+   - Selecione o repositório "benny-standup"
+   - Confirme
+
+PRONTO! Agora cada push ao GitHub fará deploy automático!
+
+════════════════════════════════════════════════════════
+ATUALIZAR CHAVE DA ANTHROPIC
+════════════════════════════════════════════════════════
+
+Acesse: https://vercel.com/vito01hugo02-9635s-projects/standup/settings/environment-variables
+
+1. Encontre ANTHROPIC_API_KEY
+2. Clique em "Edit"
+3. Cole sua chave completa (sk-ant-api03-...)
+4. Clique em "Save"
+5. Faça um redeploy: vercel --prod
+
+════════════════════════════════════════════════════════
+HOSPEDAR ARQUIVO GLB
+════════════════════════════════════════════════════════
+
+O arquivo mr_penguin.glb (132 MB) é muito grande para Vercel.
+
+OPÇÃO 1 - GitHub Releases (RECOMENDADO):
+1. Vá até: https://github.com/SEU_USERNAME/benny-standup/releases/new
+2. Tag: v1.0
+3. Title: "3D Model Assets"
+4. Upload: mr_penguin.glb
+5. Publish release
+6. Copie o URL do arquivo
+7. Atualize index.html:
+   modelPath: 'https://github.com/SEU_USERNAME/benny-standup/releases/download/v1.0/mr_penguin.glb'
+
+OPÇÃO 2 - Cloudflare R2 (Grátis até 10GB):
+1. Crie conta: https://cloudflare.com
+2. Vá em R2
+3. Create bucket: "benny-assets"
+4. Upload mr_penguin.glb
+5. Configure public access
+6. Use a URL do R2 no index.html
+
+OPÇÃO 3 - Google Drive:
+1. Upload para Drive
+2. Compartilhar > Qualquer pessoa com link
+3. Usar link direto no index.html
+
+════════════════════════════════════════════════════════
