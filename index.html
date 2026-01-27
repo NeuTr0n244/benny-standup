@@ -714,7 +714,7 @@
     }
     </script>
 
-    <!-- Inicializar variáveis Firebase ANTES dos módulos (executa imediatamente) -->
+    <!-- Inicializar variáveis globais ANTES dos módulos (executa imediatamente) -->
     <script>
         // Declarar variáveis globais Firebase
         // IMPORTANTE: Não inicializar com valores default aqui para não sobrescrever
@@ -727,6 +727,11 @@
         }
         if (typeof window.shouldAutoStart === 'undefined') {
             window.shouldAutoStart = false;
+        }
+
+        // Variável de áudio desbloqueado - NUNCA volta para false após primeiro clique
+        if (typeof window.isAudioUnlocked === 'undefined') {
+            window.isAudioUnlocked = false;
         }
     </script>
 
@@ -771,7 +776,7 @@
         let audioContext, laughBuffer;
         let jokeInterval;
         let currentJokeIndex = 0;
-        let isAudioUnlocked = false;
+        // REMOVIDO: isAudioUnlocked - agora é window.isAudioUnlocked (global)
         // REMOVIDO: window.firebaseReady e window.shouldAutoStart - agora inicializados em script inline antes do módulo
 
         // Câmeras do GLB
@@ -844,6 +849,19 @@
             setupEventListeners();
             window.addEventListener('resize', onWindowResize);
             animate();
+
+            // Keep-alive para AudioContext - garante que nunca volta para suspended
+            setInterval(() => {
+                if (audioContext && audioContext.state === 'suspended') {
+                    console.log('⚠️ AudioContext suspended! Resumindo automaticamente...');
+                    audioContext.resume().then(() => {
+                        window.isAudioUnlocked = true;
+                        console.log('✅ AudioContext resumed pelo keep-alive');
+                    }).catch(err => {
+                        console.error('❌ Erro no keep-alive do AudioContext:', err);
+                    });
+                }
+            }, 2000); // Verifica a cada 2 segundos
         }
 
         // ===== CARREGAMENTO DO MODELO =====
@@ -1148,18 +1166,20 @@
         function unlockAudio() {
             console.log('🔓 unlockAudio() chamada');
             console.log('📊 Estado:', {
-                isAudioUnlocked,
+                'window.isAudioUnlocked': window.isAudioUnlocked,
                 hasAudioContext: !!audioContext,
                 audioContextState: audioContext?.state,
                 shouldAutoStart: window.shouldAutoStart,
                 jokeLoopEnabled
             });
 
-            if (!isAudioUnlocked && audioContext && audioContext.state === 'suspended') {
+            // SEMPRE tentar resumir AudioContext se estiver suspended
+            if (audioContext && audioContext.state === 'suspended') {
                 console.log('▶️ Resumindo AudioContext...');
                 audioContext.resume().then(() => {
-                    isAudioUnlocked = true;
-                    console.log('✅ AudioContext resumed! isAudioUnlocked =', isAudioUnlocked);
+                    // Uma vez desbloqueado, NUNCA volta para false
+                    window.isAudioUnlocked = true;
+                    console.log('✅ AudioContext resumed! window.isAudioUnlocked =', window.isAudioUnlocked);
 
                     // Se auto-start está ativado e piadas ainda não iniciaram, iniciar agora!
                     if (window.shouldAutoStart && !jokeLoopEnabled) {
@@ -1179,13 +1199,16 @@
                             jokeLoopEnabled
                         });
                     }
+                }).catch(err => {
+                    console.error('❌ Erro ao resumir AudioContext:', err);
                 });
-            } else {
-                console.log('ℹ️ AudioContext já está ativo ou não existe');
+            } else if (audioContext && audioContext.state === 'running') {
+                console.log('ℹ️ AudioContext já está running');
+                window.isAudioUnlocked = true;
 
                 // Se áudio já estava desbloqueado, verificar se precisa iniciar piadas
-                if (isAudioUnlocked && window.shouldAutoStart && !jokeLoopEnabled) {
-                    console.log('🎬 Áudio já estava desbloqueado! Iniciando Benny em 1s...');
+                if (window.shouldAutoStart && !jokeLoopEnabled) {
+                    console.log('🎬 Áudio já desbloqueado! Iniciando Benny em 1s...');
                     setTimeout(() => {
                         console.log('⏰ Timeout de 1s completou (áudio já desbloqueado)! Chamando initializeBenny()...');
                         console.log('📊 Estado antes de chamar:', {
@@ -1196,6 +1219,8 @@
                         initializeBenny();
                     }, 1000);
                 }
+            } else {
+                console.log('ℹ️ AudioContext não existe ainda');
             }
         }
 
@@ -1393,33 +1418,81 @@
                     isPlayingJoke = false;
                 });
 
-                // Desbloquear áudio e tocar
-                console.log('🔓 Desbloqueando áudio...');
-                unlockAudio();
+                // Desbloquear áudio e garantir que AudioContext está running
+                console.log('🔓 Verificando áudio...');
+                console.log('📊 Estado do AudioContext:', {
+                    exists: !!audioContext,
+                    state: audioContext?.state,
+                    'window.isAudioUnlocked': window.isAudioUnlocked
+                });
+
+                // SEMPRE tentar resumir AudioContext antes de tocar
+                if (audioContext && audioContext.state === 'suspended') {
+                    console.log('⚠️ AudioContext suspended! Resumindo antes de tocar...');
+                    try {
+                        await audioContext.resume();
+                        window.isAudioUnlocked = true;
+                        console.log('✅ AudioContext resumed!');
+                    } catch (resumeErr) {
+                        console.error('❌ Erro ao resumir AudioContext:', resumeErr);
+                    }
+                }
+
                 console.log('▶️ Tentando reproduzir áudio...');
-                console.log('📊 Estado do áudio:', {
+                console.log('📊 Estado do elemento Audio:', {
                     readyState: audio.readyState,
                     paused: audio.paused,
                     volume: audio.volume,
                     src: audio.src.substring(0, 50) + '...'
                 });
 
-                await audio.play()
-                    .then(() => {
+                // Tentar tocar com retry se falhar
+                const playAudio = async (retries = 3) => {
+                    try {
+                        await audio.play();
                         console.log('🎉 ÁUDIO TOCANDO COM SUCESSO!');
-                    })
-                    .catch(err => {
-                        console.error('❌ ERRO AO TOCAR ÁUDIO:', err);
+                        return true;
+                    } catch (err) {
+                        console.error(`❌ ERRO AO TOCAR ÁUDIO (tentativa ${4 - retries}/3):`, err);
                         console.error('📝 Detalhes do erro:', {
                             name: err.name,
-                            message: err.message,
-                            code: err.code
+                            message: err.message
                         });
+
+                        // Se ainda tem retries e é erro de interação, tentar resumir e tentar de novo
+                        if (retries > 0 && err.name === 'NotAllowedError') {
+                            console.log('🔄 Tentando resumir AudioContext e tentar novamente...');
+                            if (audioContext) {
+                                try {
+                                    await audioContext.resume();
+                                    window.isAudioUnlocked = true;
+                                    await new Promise(resolve => setTimeout(resolve, 100));
+                                    return await playAudio(retries - 1);
+                                } catch (resumeErr) {
+                                    console.error('❌ Erro ao resumir AudioContext:', resumeErr);
+                                }
+                            }
+                        }
+
+                        // Se falhou todas as tentativas
+                        if (retries === 0) {
+                            console.error('❌ Falhou após 3 tentativas. Detalhes:', {
+                                name: err.name,
+                                message: err.message,
+                                code: err.code
+                            });
+                        }
+
                         throw err; // Re-throw para o catch externo
-                    });
+                    }
+                };
+
+                // Chamar função de play com retries
+                await playAudio();
 
             } catch (error) {
-                console.error('❌ Erro ao tocar piada:', error);
+                console.error('❌ Erro FINAL ao tocar piada:', error);
+                URL.revokeObjectURL(audioUrl);
                 currentJokeAudio = null;
                 isPlayingJoke = false;
             }
