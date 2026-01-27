@@ -1148,13 +1148,19 @@
 
                     // Se auto-start está ativado e piadas ainda não iniciaram, iniciar agora!
                     if (window.shouldAutoStart && !jokeLoopEnabled) {
-                        console.log('🎬 Áudio desbloqueado! Iniciando Benny automaticamente...');
+                        console.log('🎬 Áudio desbloqueado! Iniciando Benny automaticamente em 1s...');
                         setTimeout(() => {
+                            console.log('⏰ Timeout de 1s completou (após unlock)! Chamando initializeBenny()...');
+                            console.log('📊 Estado antes de chamar:', {
+                                'window.firebaseReady': window.firebaseReady,
+                                'window.currentJokeRef': window.currentJokeRef,
+                                'jokeLoopEnabled': jokeLoopEnabled
+                            });
                             initializeBenny();
                         }, 1000);
                     } else {
-                        console.log('ℹ️ Não iniciando Benny:', {
-                            shouldAutoStart: window.shouldAutoStart,
+                        console.log('ℹ️ Não iniciando Benny após unlock:', {
+                            'window.shouldAutoStart': window.shouldAutoStart,
                             jokeLoopEnabled
                         });
                     }
@@ -1164,8 +1170,14 @@
 
                 // Se áudio já estava desbloqueado, verificar se precisa iniciar piadas
                 if (isAudioUnlocked && window.shouldAutoStart && !jokeLoopEnabled) {
-                    console.log('🎬 Áudio já desbloqueado! Iniciando Benny...');
+                    console.log('🎬 Áudio já estava desbloqueado! Iniciando Benny em 1s...');
                     setTimeout(() => {
+                        console.log('⏰ Timeout de 1s completou (áudio já desbloqueado)! Chamando initializeBenny()...');
+                        console.log('📊 Estado antes de chamar:', {
+                            'window.firebaseReady': window.firebaseReady,
+                            'window.currentJokeRef': window.currentJokeRef,
+                            'jokeLoopEnabled': jokeLoopEnabled
+                        });
                         initializeBenny();
                     }, 1000);
                 }
@@ -1431,16 +1443,35 @@
 
         // ===== FUNÇÕES DE CONTROLE (via console para desenvolvimento) =====
         async function initializeBenny() {
+            console.log('🎬 initializeBenny() CHAMADA!');
+            console.log('📊 Estado COMPLETO das variáveis:', {
+                jokeLoopEnabled,
+                'window.firebaseReady': window.firebaseReady,
+                'window.currentJokeRef': window.currentJokeRef,
+                'window.shouldAutoStart': window.shouldAutoStart,
+                'typeof window.firebaseReady': typeof window.firebaseReady,
+                'typeof window.currentJokeRef': typeof window.currentJokeRef
+            });
+
             if (jokeLoopEnabled) {
                 console.log('⚠️ Benny já está ativo!');
                 return;
             }
 
             // Verificar se Firebase está pronto
+            console.log('🔍 Verificando Firebase... firebaseReady:', window.firebaseReady, ', currentJokeRef:', !!window.currentJokeRef);
             if (!window.firebaseReady || !window.currentJokeRef) {
-                console.error('❌ Firebase não está pronto! Status: firebaseReady =', window.firebaseReady, ', currentJokeRef =', !!window.currentJokeRef);
+                console.error('❌ Firebase NÃO está pronto!');
+                console.error('📋 Detalhes:', {
+                    'window.firebaseReady': window.firebaseReady,
+                    'window.currentJokeRef': window.currentJokeRef,
+                    'Tipo firebaseReady': typeof window.firebaseReady,
+                    'Tipo currentJokeRef': typeof window.currentJokeRef
+                });
                 return;
             }
+
+            console.log('✅ Firebase ESTÁ pronto! Continuando...');
 
             jokeLoopEnabled = true;
             console.log('🎭 Sistema de piadas SINCRONIZADO ativado!');
@@ -1730,18 +1761,33 @@
                 // Marcar Firebase como pronto (usar window para acesso global)
                 window.firebaseReady = true;
                 console.log('✅ Firebase inicializado com sucesso (Chat + Jokes Sync)');
-                console.log('🔥 firebaseReady = true');
+                console.log('🔥 window.firebaseReady =', window.firebaseReady);
+                console.log('🔥 window.currentJokeRef =', window.currentJokeRef);
+                console.log('🔥 window.shouldAutoStart =', window.shouldAutoStart);
 
                 // Se auto-start foi solicitado (cortinas já abriram), iniciar Benny
                 if (window.shouldAutoStart) {
                     console.log('🎭 Firebase pronto + Auto-start ativado! Iniciando Benny em 2s...');
                     setTimeout(() => {
+                        console.log('⏰ Timeout de 2s completou! Chamando window.initializeBenny()...');
+                        console.log('📊 Estado antes de chamar:', {
+                            'window.firebaseReady': window.firebaseReady,
+                            'window.currentJokeRef': window.currentJokeRef
+                        });
                         window.initializeBenny();
                     }, 2000);
+                } else {
+                    console.log('ℹ️ Auto-start NÃO ativado. shouldAutoStart =', window.shouldAutoStart);
                 }
             } catch (error) {
-                console.error('❌ Erro ao inicializar Firebase:', error);
+                console.error('❌ ERRO AO INICIALIZAR FIREBASE:', error);
+                console.error('📋 Detalhes do erro:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
                 window.firebaseReady = false;
+                console.error('🔥 window.firebaseReady RESETADO PARA:', window.firebaseReady);
             }
 
             // Elementos DOM
