@@ -57,10 +57,12 @@ module.exports = async function handler(req, res) {
         },
         body: JSON.stringify({
           text: jokeText,
-          model_id: 'eleven_monolingual_v1',
+          model_id: 'eleven_multilingual_v2',  // Modelo com mais controle de voz
           voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75
+            stability: 0.3,              // MENOR = mais variação e menos robótico (era 0.5)
+            similarity_boost: 0.5,       // MENOR = voz menos grave, mais fina (era 0.75)
+            style: 0.7,                  // Mais expressivo e com emoção
+            use_speaker_boost: true      // Melhora clareza e qualidade
           }
         })
       }
