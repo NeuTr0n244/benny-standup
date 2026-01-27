@@ -18,6 +18,7 @@ module.exports = async function handler(req, res) {
 
   try {
     let jokeText;
+    let rating = 3; // padrão: média (declarar no início)
 
     // 1. Verificar se tem texto customizado
     if (req.body && req.body.customText) {
@@ -58,7 +59,6 @@ RATING: [1, 2, or 3]`
       // Extrair piada e rating
       const lines = fullText.trim().split('\n');
       const ratingLine = lines.find(l => l.toUpperCase().includes('RATING:'));
-      let rating = 3; // padrão: média
 
       if (ratingLine) {
         const match = ratingLine.match(/\d+/);
@@ -109,14 +109,11 @@ RATING: [1, 2, or 3]`
     const audioBuffer = await elevenLabsResponse.arrayBuffer();
     const audioBase64 = Buffer.from(audioBuffer).toString('base64');
 
-    // Se não tem rating (texto customizado), usar padrão 3
-    const jokeRating = (req.body && req.body.customText) ? 3 : rating;
-
     return res.status(200).json({
       success: true,
       joke: jokeText,
       audio: audioBase64,
-      rating: jokeRating,  // 1 = leve, 2 = forte, 3 = média
+      rating: rating,  // 1 = leve, 2 = forte, 3 = média (padrão 3 se customText)
       audioFormat: 'audio/mpeg'
     });
 
