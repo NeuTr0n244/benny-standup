@@ -1701,19 +1701,19 @@
                 database = firebase.database();
                 messagesRef = database.ref('chat/messages');
 
-                // Inicializar referência para piadas sincronizadas
-                currentJokeRef = database.ref('currentJoke');
+                // Inicializar referência para piadas sincronizadas (usar window para acesso global)
+                window.currentJokeRef = database.ref('currentJoke');
 
-                // Marcar Firebase como pronto
-                firebaseReady = true;
+                // Marcar Firebase como pronto (usar window para acesso global)
+                window.firebaseReady = true;
                 console.log('✅ Firebase inicializado com sucesso (Chat + Jokes Sync)');
                 console.log('🔥 firebaseReady = true');
 
                 // Se auto-start foi solicitado (cortinas já abriram), iniciar Benny
-                if (shouldAutoStart) {
+                if (window.shouldAutoStart) {
                     console.log('🎭 Firebase pronto + Auto-start ativado! Iniciando Benny em 2s...');
                     setTimeout(() => {
-                        initializeBenny();
+                        window.initializeBenny();
                     }, 2000);
                 }
             } catch (error) {
