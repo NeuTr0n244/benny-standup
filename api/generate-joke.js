@@ -80,7 +80,7 @@ RATING: [1, 2, or 3]`
     // 2. Converter para áudio com ElevenLabs
     const fetch = (await import('node-fetch')).default;
     const elevenLabsResponse = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/fIGaHjfrR8KmMy0vGEVJ`,
+      `https://api.elevenlabs.io/v1/text-to-speech/VE5rsMNTeE1frCCSXNIC`,
       {
         method: 'POST',
         headers: {
