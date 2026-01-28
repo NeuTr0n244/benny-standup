@@ -1,13 +1,13 @@
-# 🐧 Mr. Penguin Stand-Up Comedy - 3D Interactive Website
+# 🐧 Gus Stand-Up Comedy - 3D Interactive Website
 
-Um site interativo de stand-up comedy em 3D com um personagem pinguim comediante. Construído com Three.js e WebGL.
+Um site interativo de stand-up comedy em 3D com Gus, o comediante. Construído com Three.js e WebGL.
 
-![Mr. Penguin](https://img.shields.io/badge/Mr.%20Penguin-Comedy%20Club-ff2d95?style=for-the-badge)
+![Gus](https://img.shields.io/badge/Gus-Comedy%20Club-ff2d95?style=for-the-badge)
 ![Three.js](https://img.shields.io/badge/Three.js-black?style=for-the-badge&logo=three.js)
 
 ## 🎭 Features
 
-- **Modelo 3D Completo**: Personagem pinguim animado em cenário de stand-up comedy
+- **Modelo 3D Completo**: Gus animado em cenário de stand-up comedy
 - **Tela de Loading com Cortinas**: Animação cinematográfica de cortinas vermelhas abrindo
 - **Navegação por Câmera**: 3 views diferentes (Home, About, Community)
 - **Sistema de Piadas**: Loop infinito de piadas com legendas animadas
@@ -105,7 +105,7 @@ contractAddress: '0x123456789...',
 
 **Trocar Links Sociais:**
 ```javascript
-twitterUrl: 'https://x.com/mrpenguintoken',
+twitterUrl: 'https://x.com/gustoken',
 buyUrl: 'https://raydium.io/swap/?inputCurrency=...',
 ```
 
@@ -307,4 +307,4 @@ Este projeto é open source e está disponível para uso pessoal e comercial.
 
 **Feito com 💙 para a comunidade crypto**
 
-*"Why so serious? Let's bring some laughter to your portfolio!" - Mr. Penguin* 🐧🎤
+*"Why so serious? Let's bring some laughter to your portfolio!" - Gus* 🐧🎤

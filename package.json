@@ -1,7 +1,7 @@
 {
   "name": "benny-standup",
   "version": "1.0.0",
-  "description": "Benny the Penguin - AI Stand-Up Comedy with Three.js",
+  "description": "Gus - AI Stand-Up Comedy with Three.js",
   "scripts": {
     "deploy": "vercel --prod"
   },

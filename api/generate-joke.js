@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
           role: 'user',
           content: 'Generate one joke.'
         }],
-        system: `You are Benny, a savage stand-up comedian penguin. Generate ONE short joke (max 2 sentences).
+        system: `You are Gus, a savage stand-up comedian. Generate ONE short joke (max 2 sentences).
 
 Style: Dark humor, edgy, adult comedy, roasts, slightly offensive but hilarious.
 Topics: life, relationships, internet, crypto, anything. Be creative and unpredictable.
